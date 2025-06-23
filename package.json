@@ -1,11 +1,11 @@
 {
-  "name": "functions",
-  "description": "Cloud Functions for Firebase",
+  "name": "portal sample",
+  "description": "end user portal sample application which integrates with auth0",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon -r dotenv/config index.js --watch .env",
-    "build": "gcloud builds submit --tag gcr.io/ecommerce-demo-254ec/ecommerce-store .",
-    "deploy": "gcloud run deploy ecommerce-store --image gcr.io/ecommerce-demo-254ec/ecommerce-store --region us-central1 --allow-unauthenticated"
+    //"dev": "nodemon -r dotenv/config index.js --watch .env",
+    //"build": "gcloud builds submit --tag gcr.io/ecommerce-demo-254ec/ecommerce-store .",
+    //"deploy": "gcloud run deploy ecommerce-store --image gcr.io/ecommerce-demo-254ec/ecommerce-store --region us-central1 --allow-unauthenticated"
   },
   "engines": {
     "node": ">=20"
