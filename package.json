@@ -1,5 +1,5 @@
 {
-  "name": "portal sample",
+  "name": "portal_sample",
   "description": "end user portal sample application which integrates with auth0",
   "scripts": {
     "start": "node index.js",
