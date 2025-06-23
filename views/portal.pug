@@ -1,0 +1,75 @@
+extends layout
+  
+block content
+  h1.text-center Welcome to the Dealer Portal
+    if user
+      .card
+        .card-body
+          h9.text-center Hello, #{user.email || 'Nissan Worker'}
+          //if user.picture
+            //div.text-center
+              //img(src=user.picture, alt="Profile Picture", class="img-fluid rounded-circle mb-3", style="width: 50px; height: 50px;")
+          
+          // Display user attributes in two columns
+          .row
+            .col-md-6
+              //h5 User ID
+              //p= user.user_id || 'Not available'
+
+              h5 Email
+              p= user.email || 'Not available'
+
+              h5 Name
+              p= user.user_metadata.first_name + " " + user.user_metadata.last_name || 'Nissan' + " " + 'Owner'
+              
+              h5 Street Address
+              p= user.user_metadata.address || 'Not available'
+            .col-md-6
+
+              h5 Last Login
+              p= user.last_login || 'Not available'
+
+              h5 Vehicle Identification Number (VIN)
+              p= user.app_metadata.vin || 'Not available'
+              
+              h5 State
+              p= user.user_metadata.state || 'Not available'
+
+          hr
+
+          // Edit Form
+          h3.text-center Edit Profile
+          form(action="/profile" method="POST" class="mt-4")
+            .row
+              .col-md-6.mb-3
+                label(for="first_name") First Name
+                input#name.form-control(type="text" name="first_name" placeholder="Enter your first name" value=user.user_metadata.first_name)
+              .col-md-6.mb-3
+                label(for="email") Email
+                input#email.form-control(type="email" name="email" placeholder="Enter your email" value=user.email)
+            .row
+              .col-md-6.mb-3
+                label(for="last_name") Last Name
+                input#name.form-control(type="text" name="last_name" placeholder="Enter your last name" value=user.user_metadata.last_name)
+            
+            // Dynamic Consent Checkboxes
+            .row.mt-4
+              h5.text-center.mb-3 Consent Preferences
+              each consent, index in ['privacy', 'consent', 'terms']
+                .col-md-4.mb-2
+                  label.form-check
+                    input.form-check-input(
+                      type="checkbox"
+                      name="consents[]"
+                      value=consent
+                      checked=user.user_metadata.consents.includes(consent) ? 'checked' : false
+                    )
+                    | #{consent.replace('_', ' ')}
+            .text-center
+              button.loginbtn(type="submit") Update Profile
+              //button.loginbtn(type="button", onclick="updateProfileWithMFA()") Update Profile with MFA
+            
+      footer
+
+    else
+      p.text-center You are not logged in.

@@ -1,0 +1,42 @@
+doctype html
+html
+    head
+        meta(charset='UTF-8')
+        meta(name='viewport' content='width=device-width, initial-scale=1.0')
+        title GE Vernova
+        link(rel='stylesheet' href='/static/stylesheets/style_new.css')
+        link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200")
+        link(rel="icon" type="image/x-icon" href="/static/favicon.ico")
+
+block content
+    body.body
+        .div
+            .grid
+                .box(class='text-wrapper')
+                    ul(class='menu-list')
+                        li
+                            a.home(href='/')
+                              img(src="https://www.hartenergy.com/sites/default/files/image/2024/06/ge-vernova-standard-rgb-evergreen_0.png" style="width:275px; height:80px;")
+
+            
+            .box(class='text-wrapper-2')
+                    ul(class='menu-list')
+                        li A New Era Of Energy
+                        li |
+                        li 
+                          a.header(href='/') Products
+                          <i class="material-symbols-outlined icon-white" fontSize="small">stat_minus_1</i>
+                        li
+                          a.header(href='/') Services
+                          <i class="material-symbols-outlined icon-white" fontSize="small">stat_minus_1</i>
+                        li 
+                          a.header(href='/') Resources
+                          <i class="material-symbols-outlined icon-white" fontSize="small">stat_minus_1</i>
+            
+
+            h2 Please validate your email address in order to access this application.
+            form(class='access-form')
+                input(hidden="hidden", value=state, name="state")
+                button.loginbtn(formaction="/logout", formmethod="GET") Click here to Logout
+                //- a.basic(href='/logout')
+                //-                    <i class="material-symbols-outlined" fontSize="large">logout</i>

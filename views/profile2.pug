@@ -1,0 +1,112 @@
+extends layout
+
+block content
+  .container
+    // h1.profile.text-center-profile Profile Page
+
+    if user
+      .row.g-4
+        // Left Column - User Information & Registered Devices
+        .col-md-6
+          // User Information Card
+          .card.shadow-sm.mb-4
+            .card-body
+              h4.profile.mb-3 User Information
+              .profile-section
+                p
+                  strong Name: 
+                  | #{user.user_metadata.first_name + " " + user.user_metadata.last_name || 'Panel Member'}
+                p
+                  strong Email: 
+                  | #{user.email || 'Not available'}
+                p
+                  strong Last Login: 
+                  | #{user.last_login || 'Not available'}
+          
+          // Recent Orders Card
+          .card.shadow-sm
+            .card-body
+              h4.profile.mb-3 Recent Panels
+
+              if user.user_metadata.devices && user.user_metadata.devices.length > 0
+                ul.list-unstyled
+                  each device, index in user.user_metadata.devices
+                    li.device-item.mb-2
+                      .device-card.p-2.border.rounded
+                        p.mb-1
+                          strong Panel Name: 
+                          | #{device.name || 'Unnamed Vehicle'}
+                        p.mb-0
+                          strong Completed On: 
+                          | #{device.registered_on || 'N/A'}
+              else
+                p.text-muted No recent panels.
+          
+          // Registered MFA Card
+          .card.shadow-sm
+            .card-body
+              h4.profile.mb-3 Registered MFA Factors
+              
+              h6 #{factors.id}
+
+              if factors && factors.length > 0
+                ul.list-unstyled
+                  each factor in factors
+                    li.device-item.mb-2
+                      .device-card.p-2.border.rounded
+                        p.mb-1
+                          strong Factor Type: 
+                          | #{factor.type || 'Type'}
+                        p.mb-0
+                          strong Is Verified: 
+                          | #{factor.confirmed || 'N/A'}
+              else
+                p.text-muted No registered Factors.
+                text-center.mt-4
+                  button.btn.btn-primary(type="button" onclick="window.location.href='https://niqpanel.oktademo.cloud/authorize?audience=https://niqpanel.cic-demo-platform.auth0app.com/userinfo&scope=openid&response_type=code&client_id=YyCRx1pXPfJcjVbxD3psms5qpRcMZz5O&redirect_uri=https://niq-app.glitch.me/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'") Click here to enroll
+
+
+
+        // Right Column - Editable Profile Form
+        .col-md-6
+          .card.shadow-sm
+            .card-body
+              h4.profile.mb-3 Edit Profile
+
+              form(action="/profile" method="POST")
+              
+                .mb-3
+                  label(for="first_name") First Name
+                  input#given_name.form-control(type="first_name" name="first_name" value=user.user_metadata.first_name placeholder="Enter your first name")
+                  
+                .mb-3
+                  label(for="last_name") Last Name
+                  input#family_name.form-control(type="last_name" name="last_name" value=user.user_metadata.last_name placeholder="Enter your last name")
+                  
+                .mb-3
+                  label(for="email") Email
+                  input#email.form-control(type="email" name="email" value=user.email placeholder="Enter your email")
+                
+                
+                //h5.mt-4 Consent Preferences
+                //.row.g-2
+                  each consent, index in ['privacy', 'consent', 'terms']
+                    .col-6
+                      .form-check
+                        input.form-check-input(
+                          type="checkbox"
+                          name="consents[]"
+                          value=consent
+                          checked=user.user_metadata.consents.includes(consent) ? 'checked' : false
+                        )
+                        label.form-check-label= consent.replace('_', ' ')
+
+                .text-center.mt-4
+                  button.btn.btn-primary(type="submit") Update Profile
+
+      footer.text-center.mt-4
+        p &copy; 2025 - Profile Management System
+
+    else
+      p.text-center You are not logged in.
+      

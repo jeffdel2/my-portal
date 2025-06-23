@@ -1,0 +1,123 @@
+doctype html
+html
+    head
+        meta(charset='UTF-8')
+        meta(name='viewport' content='width=device-width, initial-scale=1.0')
+        title Shape the future of media
+        link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+        link(rel='stylesheet' href='/static/stylesheets/style_new.css')
+        link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200")
+        //link(rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons")
+        link(rel="icon" type="image/x-icon" href="/static/favicon.ico")
+        script(src='/static/js/slideout.js')
+        script.
+          // JavaScript for the slide-out functionality
+          function openSlideout() {
+            document.getElementById("mySlideout").style.width = "500px";
+          }
+
+          function closeSlideout() {
+            document.getElementById("mySlideout").style.width = "0";
+          }
+          
+          async function updateProfileWithMFA() {
+            try {
+            // Step 1: Trigger MFA challenge
+            const mfaResponse = await fetch('/trigger-mfa', { method: 'POST' });
+            if (!mfaResponse.ok) throw new Error('MFA challenge failed.');
+
+            // Step 2: Submit the profile form
+            document.getElementById('profileForm').submit();
+            } catch (error) {
+              alert('MFA is required to update your profile.');
+              console.error('MFA Error:', error);
+              }
+          }
+    body
+        .div
+            .grid
+                .box(class='text-wrapper')
+                    ul(class='menu-list')
+                        li
+                            a.home(href='/')
+                              img(src="https://d2c0db5b8fb27c1c9887-9b32efc83a6b298bb22e7a1df0837426.ssl.cf2.rackcdn.com/14022013-niq-logo-505x213.png" style="height:40px;")
+                //- .box(class='text-wrapper-2') Home 2
+                //- .box(class='text-wrapper-3') Products 3
+                //- .box(class='text-wrapper-3') Contacts 4
+                .box(class='text-wrapper-2')
+                    ul(class='menu-list')
+
+                //- .box(class='text-wrapper-2')
+                    ul(class='menu-list')
+                        li <i class="material-symbols-outlined" fontSize="large">shopping_cart</i> 
+                        li 
+                            a.logout(href='https://staplescom.democorp.xyz/login/')
+                                <i class="material-symbols-outlined" fontSize="large">person</i>
+                                p Sign in
+                .box(class='text-wrapper-3')
+                    ul(class='menu-list')
+                        //- li 
+                        //- a.basic(href='/cart')
+                        //-    <i class="material-symbols-outlined" fontSize="large">shopping_cart</i>
+                        if user
+                            li
+                              a.header(href='/profile')=user.name
+                            li
+                              a.header(href='/') MyAccount
+                            li
+                              button.btn.btn-primary(onclick="window.location.href='/logout'") Logout
+                        else
+                            li
+                              a.header(href='/') Panels&nbsp&&nbspSurveys
+                            li 
+                              a.header(href='/') About&nbspNielsen
+                            li
+                              a.header(href='/') Questions                     
+                            li
+                            //button.btn.loginbtn(onclick="window.location.href='/login'") Login 
+                            button.btn.btn-primary(onclick="window.location.href='/login'") Login 
+                            //-li
+                            //-button.openbtn(type="button", id="loginCoBtn", onclick="openSlideout()") Login
+
+                //- .box(class='text-wrapper-2')
+                    if user
+                        p Hello, 
+                            a(href='/user')=user.name
+                        //- img(class="img" alt="Person" src="/images/person.svg")
+                    else
+                        //- a.login(href='/login') Log In
+                        a.logout(href='/login')
+                            //-<span class="material-symbols-outlined">person</span>
+                            <i class="material-symbols-outlined" fontSize="large">person</i>
+            
+            //- .box(class='text-wrapper-2')
+                    ul(class='menu-list')
+                        li
+                          a.header(href='/') Kitchen
+                        li 
+                          a.header(href='/') Laundry & Home
+                        li
+                          a.header(href='/') Water Filters, Parts & Accessories 
+                        li 
+                          a.header(href='/') Blog
+                        li 
+                          a.header(href='/') Sale
+            
+            block content
+            
+            #mySlideout.slideout-panel
+              ul(class='slideout-list')
+                li 
+                  a(href="javascript:void(0)", class="closebtn", onclick="closeSlideout()") × Back to main Page
+                li Sign In
+                li
+                  label(for="username") Username/Email*
+                  input.input-field(type="text", id="username", name="username")
+                li
+                  label(for="password") Password* 
+                  input.input-field(type="password", id="password", name="password")
+                li
+                  button.openbtn(type="button", id="loginCoBtn", onclick="submitLogin()") Login
+              
+            .home-page
+                
