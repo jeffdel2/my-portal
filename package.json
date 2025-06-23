@@ -8,7 +8,7 @@
     "deploy": "gcloud run deploy ecommerce-store --image gcr.io/ecommerce-demo-254ec/ecommerce-store --region us-central1 --allow-unauthenticated"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "main": "index.js",
   "dependencies": {
