@@ -11,22 +11,6 @@ const purchases = [
 	},
 ]
 
-  
-  async function getManagementApiToken() {
-  try {
-    const response = await axios.post(`https://niqpanel.cic-demo-platform.auth0app.com/oauth/token`, {
-      client_id: MGMT_CLIENT_ID,
-      client_secret: MGMT_CLIENT_SECRET,
-      audience: `https://niqpanel.cic-demo-platform.auth0app.com/api/v2/`,
-      grant_type: 'client_credentials',
-    });
-    return response.data.access_token;
-  } catch (error) {
-    console.error('Standalone error minting Management API token:', error.message);
-    throw error;
-  }
-}
-
 async function updateProfileWithMFA() {
   try {
     // Step 1: Trigger MFA challenge
@@ -41,11 +25,12 @@ async function updateProfileWithMFA() {
   }
 }
 
+/*
 const {
 	ISSUER_BASE_URL,
 	CLIENT_ID,
 	CLIENT_SECRET,
-  MGMT_CLIENT_ID,
+  	MGMT_CLIENT_ID,
 	MGMT_CLIENT_SECRET,
 	AUDIENCE,
 	SCOPE,
@@ -58,7 +43,33 @@ const {
 	BANK_AUD_SCOPES,
 	BANK_REDIRECT_URI,
 } = process.env
-const PORT = process.env.PORT || 8080
+*/
+
+
+require('dotenv').config();
+//console.log("ENV",process.env);
+
+console.log("MGMT URL", process.env.MGMT_BASE_URL)
+console.log("MGMT ID", process.env.MGMT_CLIENT_ID)
+
+  async function getManagementApiToken() {
+  try {
+	//await axios.get(`${ISSUER_BASE_URL}/api/v2/users/${userId}`,
+    const response = await axios.post(`${process.env.MGMT_BASE_URL}/oauth/token`, {
+      client_id: process.env.MGMT_CLIENT_ID,
+      client_secret: process.env.MGMT_CLIENT_SECRET,
+      audience: `${process.env.MGMT_BASE_URL}/api/v2/`,
+	  //https://my-portal.cic-demo-platform.auth0app.com/api/v2/
+      grant_type: 'client_credentials',
+    });
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Standalone error minting Management API token:', error.message);
+    throw error;
+  }
+}
+
+const PORT = process.env.PORT || 8081
 
 const express = require('express')
 const cors = require('cors')({ origin: true })
@@ -77,7 +88,7 @@ const { auth, requiresAuth } = require('express-openid-connect')
 const { Issuer } = require('openid-client')
 const { JWK } = require('node-jose')
 
-var privateKey = process.env.PVT_KEY.replace(/\\n/g, "\n")
+//var privateKey = process.env.PVT_KEY.replace(/\\n/g, "\n")
 var keystore = JWK.createKeyStore()
 var auth0Issuer
 var client
@@ -86,17 +97,17 @@ const responseType = 'code'
 const responseTypesWithToken = ['code id_token', 'code']
 
 const authConfig = {
-	secret: SESSION_SECRET,
+	secret: process.env.SESSION_SECRET,
 	authRequired: false,
 	auth0Logout: true,
-	baseURL: APP_URL,
-	issuerBaseURL: ISSUER_BASE_URL,
-	clientID: CLIENT_ID,
-	clientSecret: CLIENT_SECRET,
+	baseURL: process.env.APP_URL,
+	issuerBaseURL: process.env.ISSUER_BASE_URL,
+	clientID: process.env.CLIENT_ID,
+	clientSecret: process.env.CLIENT_SECRET,
 	authorizationParams: {
-		response_type: RESPONSE_TYPE,
-		audience: AUDIENCE,
-		scope: SCOPE,
+		response_type: process.env.RESPONSE_TYPE,
+		audience: process.env.AUDIENCE,
+		scope: process.env.SCOPE,
 	},
 }
 
@@ -130,7 +141,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(
 	session({
-		secret: SESSION_SECRET,
+		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: true,
 	})
@@ -201,8 +212,8 @@ app.get('/profile', requiresAuth(), async (req, res) => {
     const userId = req.oidc.user.sub;
     const authz_header = { Authorization: `Bearer ${token}` };
     
-    const url1 = `${ISSUER_BASE_URL}/api/v2/users/${userId}`;
-    const url2 = `${ISSUER_BASE_URL}/api/v2/users/${userId}/authentication-methods`;
+    const url1 = `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`;
+    const url2 = `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}/authentication-methods`;
 
     console.log('Initiating API calls...');
 
@@ -265,7 +276,7 @@ app.post('/profile', requiresAuth(), async (req, res) => {
     */
     
     // Fetch current user data
-    const userResponse = await axios.get(`${ISSUER_BASE_URL}/api/v2/users/${userId}`, {
+    const userResponse = await axios.get(`${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     
@@ -290,7 +301,7 @@ app.post('/profile', requiresAuth(), async (req, res) => {
     
     // Update user metadata via Auth0 Management API
     await axios.patch(
-      `${ISSUER_BASE_URL}/api/v2/users/${userId}`,
+      `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`,
       {
         user_metadata: updatedMetadata,
         email,// Optional: Update email in root profile (if allowed)
@@ -321,7 +332,7 @@ app.get('/portal', requiresAuth(), async (req, res) => {
     try {
     const token = await getManagementApiToken()
     const userId = req.oidc.user.sub;
-    const response = await axios.get(`${ISSUER_BASE_URL}/api/v2/users/${userId}`, {
+    const response = await axios.get(`${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     res.locals.user = response.data;
@@ -342,9 +353,9 @@ app.post('/trigger-mfa', requiresAuth(), async (req, res) => {
 
     // Trigger MFA Challenge
     const response = await axios.post(
-      `${ISSUER_BASE_URL}/mfa/challenge`,
+      `${process.env.ISSUER_BASE_URL}/mfa/challenge`,
       {
-        client_id: CLIENT_ID,
+        client_id: process.env.CLIENT_ID,
         user_id: userId,
       },
       {

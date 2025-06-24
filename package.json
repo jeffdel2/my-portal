@@ -2,7 +2,8 @@
   "name": "portal_sample",
   "description": "end user portal sample application which integrates with auth0",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "npm install"
   },
   "engines": {
     "node": ">=20"
