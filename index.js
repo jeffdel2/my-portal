@@ -111,6 +111,7 @@ const authConfig = {
 	},
 }
 
+console.log("AUTHCONFIG",authConfig);
 
 //add-ons for header based authN
 const { header, validationResult } = require('express-validator');
