@@ -10,7 +10,7 @@
 
 .home-page .banner {
   background-color: #ffffff;
-  background-image: url(https://cdn.glitch.global/8a420c20-a6e4-4467-9f3f-a7d47eb7afe3/niq_bg.png?v=1747746216554);
+  background-image: url("/static/images/myorg_bg.png");
   background-size: contain;
   background-repeat: no-repeat;
   display: flex;
