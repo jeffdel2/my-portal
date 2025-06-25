@@ -63,7 +63,8 @@ block content
               else
                 p.text-muted No registered Factors.
                 text-center.mt-4
-                  button.btn.btn-primary(type="button" onclick="window.location.href='https://niqpanel.oktademo.cloud/authorize?audience=https://niqpanel.cic-demo-platform.auth0app.com/userinfo&scope=openid&response_type=code&client_id=YyCRx1pXPfJcjVbxD3psms5qpRcMZz5O&redirect_uri=https://niq-app.glitch.me/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'") Click here to enroll
+                  // button.btn.btn-primary(type="button" onclick="window.location.href='https://niqpanel.oktademo.cloud/authorize?audience=https://niqpanel.cic-demo-platform.auth0app.com/userinfo&scope=openid&response_type=code&client_id=YyCRx1pXPfJcjVbxD3psms5qpRcMZz5O&redirect_uri=https://niq-app.glitch.me/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'") Click here to enroll
+                  button.btn.btn-primary(type="button" onclick=`window.location.href='${issuerUrl}/authorize?audience=${mgmtUrl}/userinfo&scope=openid&response_type=code&client_id=${clientId}&redirect_uri=${appUrl}/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'`) Click here to enroll
 
 
 
