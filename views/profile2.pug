@@ -14,8 +14,9 @@ block content
               h4.profile.mb-3 User Information
               .profile-section
                 p
-                  strong Name: 
-                  | #{user.user_metadata.first_name + " " + user.user_metadata.last_name || 'Panel Member'}
+                  strong Name:
+                  | #{(user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : '') + ' ' + (user.user_metadata && user.user_metadata.last_name ? user.user_metadata.last_name : '') || 'MyOrg Member'}
+                  //#{user.user_metadata.first_name + " " + user.user_metadata.last_name || 'MyOrg Member'}
                 p
                   strong Email: 
                   | #{user.email || 'Not available'}
@@ -28,16 +29,16 @@ block content
             .card-body
               h4.profile.mb-3 Recent Panels
 
-              if user.user_metadata.devices && user.user_metadata.devices.length > 0
+              if user && user.user_metadata && Array.isArray(user.user_metadata.devices) && user.user_metadata.devices.length > 0
                 ul.list-unstyled
                   each device, index in user.user_metadata.devices
                     li.device-item.mb-2
                       .device-card.p-2.border.rounded
                         p.mb-1
-                          strong Panel Name: 
+                          strong Panel Name:
                           | #{device.name || 'Unnamed Vehicle'}
                         p.mb-0
-                          strong Completed On: 
+                          strong Completed On:
                           | #{device.registered_on || 'N/A'}
               else
                 p.text-muted No recent panels.
@@ -78,11 +79,21 @@ block content
               
                 .mb-3
                   label(for="first_name") First Name
-                  input#given_name.form-control(type="first_name" name="first_name" value=user.user_metadata.first_name placeholder="Enter your first name")
+                  input#given_name.form-control(
+                    type="text"
+                    name="first_name"
+                    value=(user && user.user_metadata && user.user_metadata.first_name) ? user.user_metadata.first_name : ''
+                    placeholder="Enter your first name"
+                  )
                   
                 .mb-3
                   label(for="last_name") Last Name
-                  input#family_name.form-control(type="last_name" name="last_name" value=user.user_metadata.last_name placeholder="Enter your last name")
+                  input#family_name.form-control(
+                    type="text"
+                    name="last_name"
+                    value=(user && user.user_metadata && user.user_metadata.last_name) ? user.user_metadata.last_name : ''
+                    placeholder="Enter your last name"
+                  )
                   
                 .mb-3
                   label(for="email") Email

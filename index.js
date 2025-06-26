@@ -251,7 +251,14 @@ app.get('/profile', requiresAuth(), async (req, res) => {
   const mgmtUrl = `${process.env.MGMT_BASE_URL}`;
   const issuerUrl = `${process.env.ISSUER_BASE_URL}`;
   const appUrl = `${process.env.APP_URL}`;
-  res.render('profile2', { user: res.locals.user, factors: res.locals.factors, clientId, issuerUrl, mgmtUrl, appUrl });
+  res.render('profile2', 
+	{ user: res.locals.user, 
+	  factors: res.locals.factors, 
+	  clientId, 
+	  issuerUrl, 
+	  mgmtUrl, 
+	  appUrl
+	});
 });
 
 
