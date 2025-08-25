@@ -1,0 +1,84 @@
+extends layout
+
+block content
+  .content
+    .container
+      .upgrade-page
+        h2.mb-4 Choose Your Plan
+        
+        if user
+          .user-info.mb-4
+            h4 Welcome, #{user.name || user.first_name || 'User'}
+            p.text-muted Current tier: #{userTier}
+        
+        .plans-container
+          .row
+            .col-md-4
+              .plan-card.free-plan
+                .plan-header
+                  h3 Free
+                  .price $0/month
+                .plan-features
+                  ul
+                    li Basic access
+                    li Limited features
+                    li Community support
+                .plan-action
+                  button.btn.btn-secondary(disabled) Current Plan
+            .col-md-4
+              .plan-card.subscriber-plan
+                .plan-header
+                  h3 Subscriber
+                  .price $9.99/month
+                .plan-features
+                  ul
+                    li Enhanced features
+                    li Priority support
+                    li Advanced analytics
+                    li Custom integrations
+                .plan-action
+                  form(action='/upgrade', method='POST')
+                    input(type='hidden', name='tier', value='subscriber')
+                    button.btn.btn-primary(type='submit') Upgrade to Subscriber
+            .col-md-4
+              .plan-card.premium-plan
+                .plan-header
+                  h3 Premium
+                  .price $19.99/month
+                .plan-features
+                  ul
+                    li All subscriber features
+                    li Premium support
+                    li Advanced security
+                    li Custom branding
+                    li API access
+                .plan-action
+                  form(action='/upgrade', method='POST')
+                    input(type='hidden', name='tier', value='premium')
+                    button.btn.btn-success(type='submit') Upgrade to Premium
+        
+        .upgrade-info.mt-5
+          .row
+            .col-md-8.offset-md-2
+              .info-card
+                h4 Why Upgrade?
+                p Upgrade your account to unlock premium features and get the most out of our platform.
+                
+                .features-grid
+                  .row
+                    .col-md-6
+                      .feature-item
+                        h5 🔒 Enhanced Security
+                        p Advanced security features and compliance tools
+                    .col-md-6
+                      .feature-item
+                        h5 📊 Advanced Analytics
+                        p Detailed insights and reporting capabilities
+                    .col-md-6
+                      .feature-item
+                        h5 🚀 Priority Support
+                        p Get help faster with priority customer support
+                    .col-md-6
+                      .feature-item
+                        h5 🔧 Custom Integrations
+                        p Connect with your existing tools and workflows 

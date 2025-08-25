@@ -1,0 +1,58 @@
+extends layout
+
+block content
+  .content
+    .container
+      .upgrade-success-page
+        .success-card
+          .success-icon
+            span.success-checkmark ✓
+          h2.mb-4 Upgrade Successful!
+          
+          if user
+            .user-info.mb-4
+              h4 Congratulations, #{user.name || user.first_name || 'User'}!
+              p.text-muted Your account has been successfully upgraded.
+          
+          .upgrade-details.mb-4
+            .row
+              .col-md-6
+                .detail-item
+                  h5 New Tier
+                  p.badge.badge-success= userTier
+              .col-md-6
+                .detail-item
+                  h5 New Permissions
+                  if userPermissions && userPermissions.length > 0
+                    each permission in userPermissions
+                      span.badge.badge-info(style="margin-right: 8px;")= permission
+                  else
+                    p.text-muted No permissions yet
+            
+            .token-refresh-notice
+              .alert.alert-info
+                h5 🔄 Token Refresh Required
+                p Your account has been upgraded, but you may need to refresh your session to see the new permissions.
+                p
+                  a.btn.btn-sm.btn-outline-info(href='/logout') Logout and Login Again
+                  span  to get fresh tokens with your new permissions.
+          
+          .whats-next.mb-4
+            h4 What's Next?
+            .row
+              .col-md-4
+                .feature-item
+                  h5 🚀 Enhanced Features
+                  p Access to premium features and advanced functionality
+              .col-md-4
+                .feature-item
+                  h5 📊 Better Analytics
+                  p Detailed insights and reporting capabilities
+              .col-md-4
+                .feature-item
+                  h5 🔒 Priority Support
+                  p Get help faster with priority customer support
+          
+          .action-buttons
+            a.btn.btn-primary(href='/profile') Go to Profile
+            a.btn.btn-outline-secondary(href='/') Back to Home 

@@ -1,0 +1,56 @@
+extends layout
+
+mixin token(token, type)
+  li.dropdown
+    img.dropbtn(height="40px",src=`/static/images/icon-${type}.svg`)
+    .dropdown-content
+      a(href='javascript:;', onclick=`navigator.clipboard.writeText("${token}")`)
+        img(height="20px",src="/static/images/clipboard_indigo.png", alt="Copy")
+        |
+        | Copy
+      a(target='_blank',href=`https://jwt.io?token=${token}`)
+        img(height="20px",src="/static/images/jwt.svg", alt="Inspect")
+        |
+        | Inspect
+
+mixin tokenPayload(payload, title, token)
+  if payload
+    .token-section
+      .token-header
+        h3= title
+        if token
+          a.jwt-link(target='_blank', href=`https://jwt.io?token=${token}`)
+            img(height="20px", src="/static/images/jwt.svg", alt="Inspect on JWT.io")
+            span Inspect
+      .token-payload
+        pre.json-display= JSON.stringify(payload, null, 2)
+  else
+    .token-section
+      .token-header
+        h3= title
+        if token
+          a.jwt-link(target='_blank', href=`https://jwt.io?token=${token}`)
+            img(height="20px", src="/static/images/jwt.svg", alt="Inspect on JWT.io")
+            span Inspect
+      p.text-muted No payload available
+
+block content
+  .content
+    .container
+      h2.mb-4 Token Details
+      
+      .token-details
+        .row
+          .col-md-6
+            +tokenPayload(id_token_payload, 'ID Token Payload', id_token)
+          .col-md-6
+            +tokenPayload(access_token_payload, 'Access Token Payload', access_token ? access_token.access_token : null)
+        
+        if access_token && access_token.expires_in
+          .token-expiry.mt-4
+            h4 Token Expiry Information
+            -
+              const date = new Date();
+              date.setSeconds(date.getSeconds() + access_token.expires_in);
+            p Access Token expires at: #{date.toLocaleString('en-US')}
+            p Time remaining: #{Math.floor(access_token.expires_in / 60)} minutes 

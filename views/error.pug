@@ -2,6 +2,24 @@ extends layout
 
 block content
   .content
-    h1= message
-    h2= error.status
-    pre #{error.stack && error.stack.replace(/\/.*\/regular-web-app-express\/v\d.\d/g,'')}
+    .container
+      .error-page
+        .error-content
+          h1.text-danger= message || 'An error occurred'
+          
+          if error && error.status
+            h2.text-muted Error #{error.status}
+          
+          if error && error.stack
+            .error-details
+              pre.error-stack #{error.stack && error.stack.replace(/\/.*\/regular-web-app-express\/v\d.\d/g,'')}
+          
+          .error-actions
+            if userTier === 'free' && message && message.includes('Access denied')
+              .upgrade-suggestion
+                h4 Need more access?
+                p Upgrade your account to unlock premium features.
+                a.btn.btn-primary(href='/upgrade') Upgrade Now
+            
+            a.btn.btn-secondary(href='/') Go Home
+            a.btn.btn-outline-secondary(href='javascript:history.back()') Go Back

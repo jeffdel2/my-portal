@@ -65,7 +65,12 @@ html
                             li
                               a.header(href='/') MyAccount
                             li
+                              a.header(href='/tokens') Tokens
+                            li
                               a.header(href='https://saml-sample.glitch.me/profile') MySSO
+                            if userTier === 'free'
+                              li
+                                a.header.upgrade-btn(href='/upgrade') Upgrade
                             li
                               button.btn.btn-primary(onclick="window.location.href='/logout'") Logout
                         else
