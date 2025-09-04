@@ -27,6 +27,11 @@ async function updateProfileWithMFA() {
 
 
 require('dotenv').config();
+// FGA Integration
+const { FGAMiddleware } = require("./fga-middleware");
+const { RBACFGABridge } = require("./fga-rbac-bridge");
+
+
 //console.log("ENV",process.env);
 
 console.log("MGMT URL", process.env.MGMT_BASE_URL)
@@ -164,6 +169,17 @@ app.use(async (req, res, next) => {
       } else if (permissions.includes('read:sub')) {
         userTier = 'subscriber';
       }
+      
+      // Set up FGA tier permissions for authenticated users
+      if (req.oidc.user && req.oidc.user.sub) {
+        try {
+          await RBACFGABridge.updateUserTierPermissions(req.oidc.user.sub, userTier);
+          console.log(`FGA tier permissions updated for user ${req.oidc.user.sub} with tier ${userTier}`);
+        } catch (fgaError) {
+          console.error('Error updating FGA tier permissions:', fgaError);
+          // Don't fail the request if FGA setup fails, just log the error
+        }
+      }
     }
     
     // Add RBAC info to request object
@@ -216,6 +232,47 @@ const requireTier = (minTier) => {
     next();
   };
 };
+// FGA Helper Functions that work alongside RBAC
+const requireFGA = (relation, objectExtractor) => {
+  return async (req, res, next) => {
+    try {
+      // First check RBAC permissions (existing system)
+      if (!req.oidc || !req.oidc.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Then check FGA permissions (fine-grained)
+      const userId = req.oidc.user.sub;
+      const object = objectExtractor(req);
+      
+      if (!object) {
+        return res.status(400).json({ error: "Invalid resource" });
+      }
+      
+      const hasPermission = await FGAMiddleware.checkRelationship(userId, relation, object);
+      
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          error: "Access denied", 
+          message: `You don't have ${relation} permission for this resource`,
+          userTier: req.userTier,
+          userPermissions: req.userPermissions
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("FGA middleware error:", error);
+      res.status(500).json({ error: "Authorization check failed" });
+    }
+  };
+};
+
+// Combined RBAC + FGA middleware
+const requireTierAndFGA = (minTier, relation, objectExtractor) => {
+  return [requireTier(minTier), requireFGA(relation, objectExtractor)];
+};
+
 
 app.get('/', async (req, res, next) => {
 	
@@ -291,6 +348,353 @@ app.get('/upgrade-success', requiresAuth(), async (req, res) => {
     userPermissions: req.userPermissions
   });
 });
+// FGA Example Routes - demonstrating fine-grained authorization
+app.get("/fga-test", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    
+    // Test tier-based permissions using the tier_permission type
+    const tierChecks = {
+      canAccessFree: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_free", 
+        "tier_permission:global"
+      ),
+      canAccessSubscriber: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_subscriber", 
+        "tier_permission:global"
+      ),
+      canAccessPremium: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_premium", 
+        "tier_permission:global"
+      )
+    };
+    
+    // Test document permissions
+    const documentChecks = {
+      canViewExampleDoc: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_view", 
+        "document:example-doc-123"
+      ),
+      canEditExampleDoc: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_edit", 
+        "document:example-doc-123"
+      ),
+      canDeleteExampleDoc: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_delete", 
+        "document:example-doc-123"
+      )
+    };
+    
+    // List all documents user can view
+    const userDocuments = await FGAMiddleware.listUserObjects(
+      userId, 
+      "can_view", 
+      "document"
+    );
+    
+    // List all tier permissions user has
+    const userTierPermissions = await FGAMiddleware.listUserObjects(
+      userId, 
+      "can_access_free", 
+      "tier_permission"
+    );
+    
+    // Validate tier consistency between RBAC and FGA
+    const validateTierConsistency = (userTier, tierChecks) => {
+      const expectedAccess = {
+        'free': { free: true, subscriber: false, premium: false },
+        'subscriber': { free: true, subscriber: true, premium: false },
+        'premium': { free: true, subscriber: true, premium: true }
+      };
+      
+      const expected = expectedAccess[userTier] || expectedAccess['free'];
+      
+      return {
+        tier: userTier,
+        expected: expected,
+        actual: {
+          free: tierChecks.canAccessFree,
+          subscriber: tierChecks.canAccessSubscriber,
+          premium: tierChecks.canAccessPremium
+        },
+        isConsistent: (
+          tierChecks.canAccessFree === expected.free &&
+          tierChecks.canAccessSubscriber === expected.subscriber &&
+          tierChecks.canAccessPremium === expected.premium
+        )
+      };
+    };
+    
+    res.json({
+      message: "FGA Test Route with Tier Validation",
+      userId: userId,
+      userTier: userTier,
+      userPermissions: req.userPermissions,
+      fgaResults: {
+        tierValidation: {
+          currentTier: userTier,
+          tierChecks: tierChecks,
+          userTierPermissions: userTierPermissions
+        },
+        documentPermissions: documentChecks,
+        userDocuments: userDocuments,
+        tierAnalysis: validateTierConsistency(userTier, tierChecks)
+      }
+    });
+  } catch (error) {
+    console.error("FGA test error:", error);
+    res.status(500).json({ error: "FGA test failed" });
+  }
+});
+// Route to set up user's tier permissions in FGA
+app.post("/setup-fga-tier", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    
+    // Set up tier permissions in FGA
+    await RBACFGABridge.setupUserTierPermissions(userId, userTier);
+    
+    res.json({
+      message: "FGA tier permissions set up successfully",
+      userId: userId,
+      userTier: userTier,
+      fgaSetup: {
+        tierPermission: `tier_permission:global`,
+        relationships: [
+          `user:${userId} ${userTier}_tier tier_permission:global`
+        ]
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up FGA tier permissions:", error);
+    res.status(500).json({ error: "Failed to set up FGA tier permissions" });
+  }
+});
+
+// Route to check and sync RBAC with FGA
+app.get("/sync-rbac-fga", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    const userPermissions = req.userPermissions;
+    
+    // Check current FGA tier permissions
+    const currentTierChecks = {
+      canAccessFree: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_free", 
+        "tier_permission:global"
+      ),
+      canAccessSubscriber: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_subscriber", 
+        "tier_permission:global"
+      ),
+      canAccessPremium: await FGAMiddleware.checkRelationship(
+        userId, 
+        "can_access_premium", 
+        "tier_permission:global"
+      )
+    };
+    
+    // Determine if sync is needed
+    const expectedTier = userTier;
+    const needsSync = !currentTierChecks[`canAccess${expectedTier.charAt(0).toUpperCase() + expectedTier.slice(1)}`];
+    
+    if (needsSync) {
+      // Set up tier permissions in FGA
+      await RBACFGABridge.setupUserTierPermissions(userId, userTier);
+    }
+    
+    res.json({
+      message: "RBAC-FGA sync check completed",
+      userId: userId,
+      rbacInfo: {
+        userTier: userTier,
+        userPermissions: userPermissions
+      },
+      fgaInfo: {
+        currentTierChecks: currentTierChecks,
+        needsSync: needsSync,
+        synced: needsSync
+      }
+    });
+  } catch (error) {
+    console.error("Error syncing RBAC with FGA:", error);
+    res.status(500).json({ error: "Failed to sync RBAC with FGA" });
+  }
+});
+
+
+// Example route with FGA middleware
+app.get("/documents/:id", requiresAuth(), 
+  requireFGA("viewer", (req) => `document:${req.params.id}`),
+  async (req, res) => {
+    res.json({
+      message: `Access granted to document ${req.params.id}`,
+      documentId: req.params.id,
+      user: req.oidc.user.sub
+    });
+  }
+);
+
+// Example route combining RBAC + FGA
+app.get("/premium-documents/:id", requiresAuth(), 
+  requireTier("subscriber"),
+  requireFGA("viewer", (req) => `document:${req.params.id}`),
+  async (req, res) => {
+    res.json({
+      message: `Access granted to premium document ${req.params.id}`,
+      documentId: req.params.id,
+      user: req.oidc.user.sub,
+      userTier: req.userTier
+    });
+  }
+);
+// RBAC + FGA Integration Examples
+
+// Route that demonstrates tier-based access with FGA
+app.get("/my-documents", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    
+    // List all documents user can view (combines RBAC tier + FGA permissions)
+    const userDocuments = await FGAMiddleware.listUserObjects(
+      userId, 
+      "can_view", 
+      "document"
+    );
+    
+    res.json({
+      message: "Your accessible documents",
+      userId: userId,
+      userTier: userTier,
+      documents: userDocuments,
+      tierInfo: {
+        canCreateDocuments: userTier !== 'free',
+        canEditDocuments: ['subscriber', 'premium'].includes(userTier),
+        canDeleteDocuments: userTier === 'premium'
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching user documents:", error);
+    res.status(500).json({ error: "Failed to fetch documents" });
+  }
+});
+
+// Route that creates a document with proper FGA relationships
+app.post("/documents", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    const { title, content } = req.body;
+    
+    // Check RBAC tier permission
+    if (userTier === 'free') {
+      return res.status(403).json({ 
+        error: "Upgrade required", 
+        message: "Free tier users cannot create documents. Please upgrade to subscriber or premium." 
+      });
+    }
+    
+    // Create document (in real app, this would save to database)
+    const documentId = 'doc_' + Date.now();
+    
+    // Set up FGA relationships for the new document
+    await RBACFGABridge.createResourceOwnership(userId, 'document', documentId);
+    
+    res.json({
+      message: "Document created successfully",
+      documentId: documentId,
+      title: title,
+      owner: userId,
+      userTier: userTier
+    });
+  } catch (error) {
+    console.error("Error creating document:", error);
+    res.status(500).json({ error: "Failed to create document" });
+  }
+});
+
+// Route that demonstrates sharing with FGA
+app.post("/documents/:id/share", requiresAuth(), 
+  requireFGA("can_share", (req) => 'document:' + req.params.id),
+  async (req, res) => {
+    try {
+      const ownerId = req.oidc.user.sub;
+      const documentId = req.params.id;
+      const { shareWithEmail, permission = 'viewer' } = req.body;
+      
+      // In a real app, you'd look up the user by email
+      // For demo purposes, we'll use a mock user ID
+      const shareWithUserId = 'user_' + shareWithEmail.replace('@', '_');
+      
+      await RBACFGABridge.shareResource(
+        ownerId, 
+        shareWithUserId, 
+        'document', 
+        documentId, 
+        permission
+      );
+      
+      res.json({
+        message: "Document shared successfully",
+        documentId: documentId,
+        sharedWith: shareWithEmail,
+        permission: permission
+      });
+    } catch (error) {
+      console.error("Error sharing document:", error);
+      res.status(500).json({ error: "Failed to share document" });
+    }
+  }
+);
+
+// Route that demonstrates combined RBAC + FGA access control
+app.get("/documents/:id", requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const userTier = req.userTier;
+    const documentId = req.params.id;
+    
+    // Check both RBAC tier and FGA permissions
+    const hasAccess = await RBACFGABridge.checkResourceAccess(
+      userId, 
+      userTier, 
+      'document', 
+      documentId, 
+      'view'
+    );
+    
+    if (!hasAccess) {
+      return res.status(403).json({ 
+        error: "Access denied",
+        message: "You don't have permission to view this document",
+        userTier: userTier
+      });
+    }
+    
+    res.json({
+      message: "Document access granted",
+      documentId: documentId,
+      userTier: userTier,
+      accessLevel: "viewer"
+    });
+  } catch (error) {
+    console.error("Error accessing document:", error);
+    res.status(500).json({ error: "Failed to access document" });
+  }
+});
+
 
 /*
 app.get('/access', async (req, res) => {
@@ -442,6 +846,15 @@ app.post('/upgrade', requiresAuth(), async (req, res) => {
     );
     
     console.log(`User ${userId} upgraded to ${tier} tier with role: ${roleId}`);
+    
+    // Update FGA tier permissions for the upgraded user
+    try {
+      await RBACFGABridge.updateUserTierPermissions(userId, tier);
+      console.log(`FGA tier permissions updated for user ${userId} to ${tier} tier`);
+    } catch (fgaError) {
+      console.error('Error updating FGA tier permissions during upgrade:', fgaError);
+      // Don't fail the upgrade if FGA update fails, just log the error
+    }
     
     // Store upgrade info in session for the success page
     req.session.upgradeInfo = {

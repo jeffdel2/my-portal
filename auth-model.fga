@@ -1,0 +1,50 @@
+model
+  schema 1.1
+
+type user
+
+# Resource types that align with your existing app
+type document
+  relations
+    define owner: [user]
+    define viewer: [user, user:*]
+    define editor: [user]
+    # Permissions that align with your RBAC tiers
+    define can_view: viewer or owner
+    define can_edit: editor or owner
+    define can_delete: owner
+    define can_share: owner
+
+type project
+  relations
+    define owner: [user]
+    define member: [user]
+    define viewer: [user, user:*]
+    define can_view: viewer or member or owner
+    define can_edit: member or owner
+    define can_delete: owner
+    define can_manage: owner
+
+type transaction
+  relations
+    define owner: [user]
+    define viewer: [user, user:*]
+    define can_view: viewer or owner
+    define can_edit: owner
+    define can_delete: owner
+
+type balance
+  relations
+    define owner: [user]
+    define viewer: [user, user:*]
+    define can_view: viewer or owner
+
+# Tier-based permissions that work with your existing RBAC
+type tier_permission
+  relations
+    define free_tier: [user]
+    define subscriber_tier: [user]
+    define premium_tier: [user]
+    define can_access_free: free_tier or subscriber_tier or premium_tier
+    define can_access_subscriber: subscriber_tier or premium_tier
+    define can_access_premium: premium_tier

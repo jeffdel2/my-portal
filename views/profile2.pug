@@ -9,22 +9,18 @@ block content
           .col-12
             .welcome-card
               .welcome-content
-                h2.welcome-title Welcome back, #{user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : user.name || 'User'}!
-                .subscription-info
-                  .subscription-badge(class=`subscription-${userTier}`)
-                    span.subscription-icon
-                      if userTier === 'premium'
-                        | ⭐
-                      else if userTier === 'subscriber'
-                        | 🔹
-                      else
-                        | 🔓
-                    span.subscription-text #{userTier.charAt(0).toUpperCase() + userTier.slice(1)} Tier
-                  if userPermissions && userPermissions.length > 0
-                    .permissions-info
-                      span.permissions-label Permissions:
-                      each permission in userPermissions
-                        span.permission-badge= permission
+                .welcome-row
+                  h2.welcome-title Welcome back, #{user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : user.name || 'User'}!
+                  .subscription-info
+                    .subscription-badge(class=`subscription-${userTier}`)
+                      span.subscription-icon
+                        if userTier === 'premium'
+                          | ⭐
+                        else if userTier === 'subscriber'
+                          | 🔹
+                        else
+                          | 🔓
+                      span.subscription-text #{userTier.charAt(0).toUpperCase() + userTier.slice(1)} Tier
 
     if user
       .row.g-4

@@ -1912,27 +1912,22 @@ hr {
 
 /* Upgrade Button Styles */
 .upgrade-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
     color: white !important;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.3s ease;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    display: inline-block;
-    text-align: center;
-    line-height: 1.5;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: normal !important;
+    transition: background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
 }
 
 .upgrade-btn:hover {
-    background: linear-gradient(135deg, #ee5a24, #ff6b6b);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(238, 90, 36, 0.3);
+    background: linear-gradient(135deg, #ee5a24, #ff6b6b) !important;
     color: white !important;
-    text-decoration: none;
 }
 
 /* Upgrade Page Styles */
@@ -2336,8 +2331,14 @@ hr {
     color: white;
     font-size: 28px;
     font-weight: 600;
-    margin-bottom: 20px;
-    margin: 0 0 20px 0;
+    margin: 0;
+}
+
+.welcome-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
 }
 
 .subscription-info {
@@ -2345,6 +2346,7 @@ hr {
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
+    margin: 0;
 }
 
 .subscription-badge {
@@ -2411,6 +2413,12 @@ hr {
     
     .welcome-title {
         font-size: 24px;
+    }
+    
+    .welcome-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
     }
     
     .subscription-info {

@@ -41,10 +41,12 @@ block content
       
       .token-details
         .row
-          .col-md-6
+          .col-md-4
             +tokenPayload(id_token_payload, 'ID Token Payload', id_token)
-          .col-md-6
+          .col-md-4
             +tokenPayload(access_token_payload, 'Access Token Payload', access_token ? access_token.access_token : null)
+          .col-md-4
+            +tokenPayload(null, 'Refresh Token', refresh_token)
         
         if access_token && access_token.expires_in
           .token-expiry.mt-4
