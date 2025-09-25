@@ -1701,7 +1701,7 @@ input.form-control {
 }
 
 button.btn {
-    background-color: #2c6cf5;
+    background-color: #00aae1;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -1712,7 +1712,7 @@ button.btn {
 }
 
 button.btn:hover {
-    background-color: #5184f0;
+    background-color: #26BCF0;
 }
 
 .form-check {
