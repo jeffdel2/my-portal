@@ -165,9 +165,9 @@ app.use(async (req, res, next) => {
       // No need to check app_metadata as permissions are managed through Auth0's RBAC system
       
       // Determine user tier based on permissions
-      if (permissions.includes('read:premium')) {
+      if (permissions.includes('sub:premium')) {
         userTier = 'premium';
-      } else if (permissions.includes('read:sub')) {
+      } else if (permissions.includes('sub:basic')) {
         userTier = 'subscriber';
       }
       
@@ -288,58 +288,11 @@ app.get('/', async (req, res, next) => {
 	}
 })
 
-app.get('/debug-rbac', (req, res) => {
-  console.log('Debug RBAC route accessed');
-  console.log('req.oidc:', !!req.oidc);
-  console.log('req.userTier:', req.userTier);
-  console.log('req.userPermissions:', req.userPermissions);
-  
-  res.json({
-    isAuthenticated: !!req.oidc,
-    user: req.oidc ? req.oidc.user : null,
-    userTier: req.userTier,
-    userPermissions: req.userPermissions,
-    hasAccessToken: !!(req.oidc && req.oidc.accessToken),
-    accessTokenExists: !!(req.oidc && req.oidc.accessToken && req.oidc.accessToken.access_token)
+app.get('/force-refresh', requiresAuth(), (req, res) => {
+  // Force a complete logout/login to refresh tokens
+  res.oidc.logout({
+    returnTo: '/profile'
   });
-});
-
-app.get('/test', (req, res) => {
-  res.json({ message: 'Test route working', path: req.path });
-});
-
-app.get('/test-upgrade', requiresAuth(), async (req, res) => {
-  try {
-    const token = await getManagementApiToken();
-    const userId = req.oidc.user.sub;
-    
-    // Get current user data
-    const userResponse = await axios.get(
-      `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    
-    // Get user's roles
-    const rolesResponse = await axios.get(
-      `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}/roles`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    
-    res.json({
-      userId: userId,
-      currentTier: req.userTier,
-      currentPermissions: req.userPermissions,
-      userRoles: rolesResponse.data,
-      userMetadata: userResponse.data.user_metadata
-    });
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).json({ error: 'Failed to fetch user data' });
-  }
 });
 
 app.get('/upgrade-success', requiresAuth(), async (req, res) => {
@@ -851,7 +804,6 @@ app.post('/upgrade', requiresAuth(), async (req, res) => {
     // Update FGA tier permissions for the upgraded user
     try {
       await RBACFGABridge.updateUserTierPermissions(userId, tier);
-      console.log(`FGA tier permissions updated for user ${userId} to ${tier} tier`);
     } catch (fgaError) {
       console.error('Error updating FGA tier permissions during upgrade:', fgaError);
       // Don't fail the upgrade if FGA update fails, just log the error
@@ -863,11 +815,9 @@ app.post('/upgrade', requiresAuth(), async (req, res) => {
       upgradedAt: new Date().toISOString()
     };
     
-    // Trigger a fresh authorization flow to get new tokens with updated permissions
-    // This will redirect to Auth0 and then back to the success page
-    res.oidc.login({
-      returnTo: '/upgrade-success',
-      prompt: 'consent'
+    // Force a complete logout/login to ensure fresh tokens with new permissions
+    res.oidc.logout({
+      returnTo: '/upgrade-success?upgraded=true&tier=' + tier
     });
     
   } catch (error) {

@@ -43,7 +43,7 @@ block content
                   | #{user.last_login || 'Not available'}
           
           // Recent Orders Card
-          .card.shadow-sm
+          .card.shadow-sm.mb-4
             .card-body
               h4.profile.mb-3 Recent Panels
 
@@ -60,6 +60,12 @@ block content
                           | #{device.registered_on || 'N/A'}
               else
                 p.text-muted No recent panels.
+          
+          // Section Separator
+          .section-separator
+            hr.separator-line
+            .separator-text
+              span 
           
           // Registered MFA Card
           .card.shadow-sm

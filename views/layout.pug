@@ -63,11 +63,9 @@ html
                             li
                               a.header(href='/profile')=user.name
                             li
-                              a.header(href='/') MyAccount
-                            li
                               a.header(href='/tokens') Tokens
                             li
-                              a.header(href='https://saml-sample.glitch.me/profile') MySSO
+                              a.header(href='https://saml-sample.glitch.me/profile') Services
                             if userTier === 'free'
                               li
                                 a.header.upgrade-btn(href='/upgrade') Upgrade
