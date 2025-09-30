@@ -87,9 +87,22 @@ block content
                           | #{factor.confirmed || 'N/A'}
               else
                 p.text-muted No registered Factors.
-                text-center.mt-4
-                  // button.btn.btn-primary(type="button" onclick="window.location.href='https://niqpanel.oktademo.cloud/authorize?audience=https://niqpanel.cic-demo-platform.auth0app.com/userinfo&scope=openid&response_type=code&client_id=YyCRx1pXPfJcjVbxD3psms5qpRcMZz5O&redirect_uri=https://niq-app.glitch.me/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'") Click here to enroll
+                .text-center.mt-4
                   button.btn.btn-primary(type="button" onclick=`window.location.href='${issuerUrl}/authorize?audience=${mgmtUrl}/userinfo&scope=openid&response_type=code&client_id=${clientId}&redirect_uri=${appUrl}/profile&state=qwhgdiuqwhsw2hdue2bhfdiul2hdlweiuhde&acr_values=http://schemas.openid.net/pape/policies/2007/06/multi-factor'`) Click here to enroll
+            
+            // MFA Opt-in Setting
+            .mfa-optin-section.mt-4
+              .form-check
+                input.form-check-input(
+                  type="checkbox", 
+                  id="mfaOptin", 
+                  checked=user.user_metadata && user.user_metadata.optinmfa === 'true',
+                  onclick="toggleMfaOptin(this)"
+                )
+                label.form-check-label(for="mfaOptin")
+                  strong Require MFA on Login
+                    p.form-text.text-muted
+                      | When enabled, you will be prompted for multi-factor authentication on every login.
 
 
 
@@ -98,8 +111,15 @@ block content
           .card.shadow-sm
             .card-body
               h4.profile.mb-3 Edit Profile
+              
+              // Success message for profile updates
+              if updateSuccess
+                .alert.alert-success.alert-dismissible.fade.show.mb-3#profileUpdateSuccess
+                  strong ✓ Profile Updated Successfully!
+                  | Your profile has been updated with MFA verification.
+                  button.btn-close(type="button" data-bs-dismiss="alert")
 
-              form(action="/profile" method="POST")
+              form#profileForm(action="/profile" method="POST")
               
                 .mb-3
                   label(for="first_name") First Name
@@ -138,11 +158,26 @@ block content
                         label.form-check-label= consent.replace('_', ' ')
 
                 .text-center.mt-4
-                  button.btn.btn-primary(type="submit") Update Profile
+                  button.btn.btn-primary(type="submit") 
+                    | 🔒 Update Profile
 
       footer.text-center.mt-4
         p &copy; 2025 - Profile Management System
 
     else
       p.text-center You are not logged in.
+
+    // Auto-dismiss profile update success message
+    script.
+      document.addEventListener('DOMContentLoaded', function() {
+        const successMessage = document.getElementById('profileUpdateSuccess');
+        if (successMessage) {
+          // Auto-dismiss after 3 seconds
+          setTimeout(() => {
+            if (successMessage.parentNode) {
+              successMessage.parentNode.removeChild(successMessage);
+            }
+          }, 3000);
+        }
+      });
       

@@ -20,18 +20,48 @@ html
             document.getElementById("mySlideout").style.width = "0";
           }
           
-          async function updateProfileWithMFA() {
+          
+          async function toggleMfaOptin(checkbox) {
             try {
-            // Step 1: Trigger MFA challenge
-            const mfaResponse = await fetch('/trigger-mfa', { method: 'POST' });
-            if (!mfaResponse.ok) throw new Error('MFA challenge failed.');
-
-            // Step 2: Submit the profile form
-            document.getElementById('profileForm').submit();
-            } catch (error) {
-              alert('MFA is required to update your profile.');
-              console.error('MFA Error:', error);
+              const optinmfa = checkbox.checked ? 'true' : 'false';
+              
+              const response = await fetch('/toggle-mfa-optin', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ optinmfa: optinmfa })
+              });
+              
+              const result = await response.json();
+              
+              if (result.success) {
+                // Show success message
+                const message = document.createElement('div');
+                message.className = 'alert alert-success alert-dismissible fade show mt-2';
+                message.innerHTML = `
+                  ${result.message}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                checkbox.closest('.mfa-optin-section').appendChild(message);
+                
+                // Remove the message after 3 seconds
+                setTimeout(() => {
+                  if (message.parentNode) {
+                    message.parentNode.removeChild(message);
+                  }
+                }, 3000);
+              } else {
+                // Revert checkbox state on error
+                checkbox.checked = !checkbox.checked;
+                alert('Failed to update MFA setting: ' + (result.error || 'Unknown error'));
               }
+            } catch (error) {
+              // Revert checkbox state on error
+              checkbox.checked = !checkbox.checked;
+              console.error('Error toggling MFA opt-in:', error);
+              alert('Failed to update MFA setting. Please try again.');
+            }
           }
     body
         .div
@@ -79,7 +109,7 @@ html
                             li
                               a.header(href='/') Internet                     
                             li 
-                            button.btn.btn-primary(onclick="window.location.href='/login'") Login 
+                            button.btn.btn-primary(onclick="window.location.href='/login'") Customer&nbspLogin 
                             //-li
                             //-button.openbtn(type="button", id="loginCoBtn", onclick="openSlideout()") Login
 

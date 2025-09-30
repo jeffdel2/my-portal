@@ -120,7 +120,6 @@ app.use(cors)
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
 app.use('/static', express.static('public'))
-app.use(auth(authConfig))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
@@ -131,6 +130,22 @@ app.use(
 		saveUninitialized: true,
 	})
 )
+
+// Custom callback handler to check for MFA return (must be before auth middleware)
+app.get('/callback', (req, res, next) => {
+  // Check if this is a return from our MFA flow
+  if (req.session && req.session.mfaReturnTo) {
+    const returnTo = req.session.mfaReturnTo;
+    delete req.session.mfaReturnTo;
+    console.log('MFA flow completed, redirecting to:', returnTo);
+    return res.redirect(returnTo);
+  }
+  
+  // Otherwise, use the default callback handling
+  next();
+});
+
+app.use(auth(authConfig))
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -852,8 +867,8 @@ app.get('/profile', requiresAuth(), async (req, res) => {
     const userId = req.oidc.user.sub;
     const authz_header = { Authorization: `Bearer ${token}` };
     
-    const url1 = `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`;
-    const url2 = `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}/authentication-methods`;
+    const url1 = `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`;
+    const url2 = `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}/authentication-methods`;
 
     console.log('Initiating API calls...');
 
@@ -890,44 +905,80 @@ app.get('/profile', requiresAuth(), async (req, res) => {
   const mgmtUrl = `${process.env.MGMT_BASE_URL}`;
   const issuerUrl = `${process.env.ISSUER_BASE_URL}`;
   const appUrl = `${process.env.APP_URL}`;
+  
+  // Check if this is a successful update redirect
+  const updateSuccess = req.query.updated === 'true';
+  
   res.render('profile2', 
 	{ user: res.locals.user, 
 	  factors: res.locals.factors, 
 	  clientId, 
 	  issuerUrl, 
 	  mgmtUrl, 
-	  appUrl
+	  appUrl,
+	  updateSuccess: updateSuccess
 	});
 });
 
 
-// Handle profile updates
+// Handle profile updates - Step 1: Store data and redirect to Auth0 for MFA
 app.post('/profile', requiresAuth(), async (req, res) => {
-  const userId = req.oidc.user.sub;
   const { name, email, first_name, last_name, consents } = req.body;
   const sanitizedConsents = Array.isArray(consents) ? consents.filter(Boolean) : [];
 
   try {
-    const token = await getManagementApiToken()
-    
-    /* Step 1: Trigger MFA Challenge
-    const mfaChallengeResponse = await axios.post(
-      `${ISSUER_BASE_URL}/mfa/challenge`,
-      {
-        client_id: CLIENT_ID,
-        user_id: userId,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    // Store pending profile update data in session
+    req.session.pendingProfileUpdate = {
+      name,
+      email,
+      first_name,
+      last_name,
+      consents: sanitizedConsents,
+      timestamp: new Date().toISOString()
+    };
 
-    // The MFA challenge is sent; now await user confirmation.
-    const mfaToken = mfaChallengeResponse.data.mfa_token;
-    */
+    console.log('Stored pending profile update, redirecting to Auth0 for MFA verification');
     
+    // Build Auth0 authorization URL with MFA requirement
+    const auth0AuthUrl = new URL(`${process.env.ISSUER_BASE_URL}/authorize`);
+    auth0AuthUrl.searchParams.set('response_type', 'code');
+    auth0AuthUrl.searchParams.set('client_id', process.env.CLIENT_ID);
+    auth0AuthUrl.searchParams.set('redirect_uri', `${process.env.APP_URL}/callback`);
+    auth0AuthUrl.searchParams.set('scope', process.env.SCOPE);
+    auth0AuthUrl.searchParams.set('audience', process.env.AUDIENCE);
+    auth0AuthUrl.searchParams.set('state', 'profile-update-mfa');
+    auth0AuthUrl.searchParams.set('prompt', 'mfa');
+    auth0AuthUrl.searchParams.set('acr_values', 'http://schemas.openid.net/pape/policies/2007/06/multi-factor/challenge');
+    
+    // Store the return URL in session for after MFA completion
+    req.session.mfaReturnTo = '/profile-update-complete';
+    
+    console.log('Redirecting to Auth0 with MFA requirement:', auth0AuthUrl.toString());
+    res.redirect(auth0AuthUrl.toString());
+    
+  } catch (error) {
+    console.error('Error initiating profile update with MFA:', error.message);
+    res.status(500).send('Error initiating profile update.');
+  }
+});
+
+// Handle profile update completion after MFA verification
+app.get('/profile-update-complete', requiresAuth(), async (req, res) => {
+  try {
+    // Check if there's pending profile update data
+    if (!req.session.pendingProfileUpdate) {
+      console.log('No pending profile update found, redirecting to profile');
+      return res.redirect('/profile');
+    }
+
+    const pendingUpdate = req.session.pendingProfileUpdate;
+    const userId = req.oidc.user.sub;
+    const token = await getManagementApiToken();
+
+    console.log('Processing pending profile update after MFA verification');
+
     // Fetch current user data
-    const userResponse = await axios.get(`${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`, {
+    const userResponse = await axios.get(`${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     
@@ -935,39 +986,43 @@ app.post('/profile', requiresAuth(), async (req, res) => {
     
     // Merge existing metadata with new updates
     const updatedMetadata = {
-      //...currentMetadata.consents,
-      consents: sanitizedConsents || "",
-      first_name: first_name || "",
-      last_name: last_name || ""
+      ...currentMetadata,
+      consents: pendingUpdate.consents || "",
+      first_name: pendingUpdate.first_name || "",
+      last_name: pendingUpdate.last_name || ""
     };
     
-    // Merge existing core attributes with new updates
-    //const updatedGivenName = given_name || null;
-    //const updatedFamilyName = family_name || null;
-    
-    console.log('Payload to Auth0:', {
-      user_metadata: { ...currentMetadata, consents: sanitizedConsents },
-      email
-      });
+    console.log('Updating user profile with verified session:', {
+      user_metadata: updatedMetadata,
+      email: pendingUpdate.email
+    });
     
     // Update user metadata via Auth0 Management API
     await axios.patch(
-      `${process.env.ISSUER_BASE_URL}/api/v2/users/${userId}`,
+      `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
       {
         user_metadata: updatedMetadata,
-        email,// Optional: Update email in root profile (if allowed)
-        name,
-        //given_name: updatedGivenName,
-        //family_name: updatedFamilyName
+        email: pendingUpdate.email,
+        name: pendingUpdate.name
       },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    res.redirect('/profile');
+
+    // Clear pending update from session
+    delete req.session.pendingProfileUpdate;
+    
+    console.log('Profile update completed successfully');
+    
+    // Redirect back to profile with success message
+    res.redirect('/profile?updated=true');
+    
   } catch (error) {
-    console.error('Error updating user data:', error.message);
-    res.status(500).send('Error updating profile.');
+    console.error('Error completing profile update:', error.message);
+    // Clear pending update on error
+    delete req.session.pendingProfileUpdate;
+    res.status(500).send('Error completing profile update.');
   }
 });
 
@@ -1018,6 +1073,40 @@ app.post('/trigger-mfa', requiresAuth(), async (req, res) => {
   } catch (error) {
     console.error('Error triggering MFA:', error.response?.data || error.message);
     res.status(500).send('Error triggering MFA.');
+  }
+});
+
+app.post('/toggle-mfa-optin', requiresAuth(), async (req, res) => {
+  const userId = req.oidc.user.sub;
+  const { optinmfa } = req.body;
+
+  try {
+    const token = await getManagementApiToken();
+
+    // Update user metadata with MFA opt-in setting
+    await axios.patch(
+      `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
+      {
+        user_metadata: {
+          optinmfa: optinmfa === 'true' ? 'true' : 'false'
+        }
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `MFA opt-in ${optinmfa === 'true' ? 'enabled' : 'disabled'} successfully`,
+      optinmfa: optinmfa === 'true' ? 'true' : 'false'
+    });
+  } catch (error) {
+    console.error('Error updating MFA opt-in setting:', error.response?.data || error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to update MFA opt-in setting' 
+    });
   }
 });
 

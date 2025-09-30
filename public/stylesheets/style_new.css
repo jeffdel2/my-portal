@@ -2552,6 +2552,34 @@ hr {
     text-decoration: underline;
 }
 
+/* MFA Opt-in Section Styles */
+.mfa-optin-section {
+    background: #2a2a2a;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.mfa-optin-section .form-check-input {
+    background-color: #2a2a2a;
+    border: 1px solid #0078d4;
+}
+
+.mfa-optin-section .form-check-input:checked {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+
+.mfa-optin-section .form-check-label {
+    color: #ffffff;
+}
+
+.mfa-optin-section .form-text {
+    color: #cccccc;
+    font-size: 13px;
+}
+
 /* Section Separator Styles */
 .section-separator {
     margin: 30px 0;
