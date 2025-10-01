@@ -1,0 +1,319 @@
+extends layout
+
+block content
+  .partners-page
+    // Professional Hero Section
+    .partners-hero-section
+      .container
+        .row.align-items-center.min-vh-75
+          .col-lg-6
+            .partners-hero-content
+              .partners-badge
+                span.badge-text Enterprise Partnership
+              h1.partners-main-title
+                | Accelerate Your Business with 
+                span.highlight AT&T Partnership
+              p.partners-hero-description
+                | Join our exclusive partner ecosystem and unlock new revenue streams, 
+                | access cutting-edge technology, and grow your business with industry-leading solutions.
+              .partners-cta-buttons
+                if user && userTier === 'premium'
+                  a.btn.btn-partners-primary.btn-lg(href='/partners/admin')
+                    i.fas.fa-cog.me-2
+                    | Admin Dashboard
+                  a.btn.btn-partners-outline.btn-lg(href='/partners/login')
+                    i.fas.fa-sign-in-alt.me-2
+                    | Partner Login
+                else if user
+                  a.btn.btn-partners-primary.btn-lg(href='/partners/login')
+                    i.fas.fa-sign-in-alt.me-2
+                    | Partner Login
+                  a.btn.btn-partners-outline.btn-lg(href='/partners/dashboard')
+                    i.fas.fa-tachometer-alt.me-2
+                    | My Dashboard
+                else
+                  a.btn.btn-partners-primary.btn-lg(href='/partners/login')
+                    i.fas.fa-sign-in-alt.me-2
+                    | Partner Login
+                  a.btn.btn-partners-outline.btn-lg(href='/partners/register')
+                    i.fas.fa-handshake.me-2
+                    | Become a Partner
+              .partners-trust-indicators
+                .trust-item
+                  span.trust-number 500+
+                  span.trust-label Active Partners
+                .trust-item
+                  span.trust-number $2B+
+                  span.trust-label Partner Revenue
+                .trust-item
+                  span.trust-number 99.9%
+                  span.trust-label Uptime SLA
+          .col-lg-6
+            .partners-hero-visual
+              .partners-visual-card
+                .visual-header
+                  .visual-icon
+                    i.fas.fa-chart-line
+                  h4 Partner Dashboard
+                .visual-content
+                  .metric-row
+                    .metric
+                      .metric-value $125K
+                      .metric-label Monthly Revenue
+                    .metric
+                      .metric-value 45
+                      .metric-label Active Deals
+                  .chart-placeholder
+                    .chart-bar(style="height: 60%")
+                    .chart-bar(style="height: 80%")
+                    .chart-bar(style="height: 45%")
+                    .chart-bar(style="height: 90%")
+                    .chart-bar(style="height: 70%")
+
+    // Admin Section (Premium Users Only)
+    if user && userTier === 'premium'
+      .partners-admin-section
+        .container
+          .admin-banner
+            .admin-content
+              .admin-badge
+                i.fas.fa-crown.me-2
+                span.badge-text Partner Administrator
+              h2.admin-title Welcome, #{user.name || 'Admin'}
+              p.admin-description Access advanced partner management tools and administrative functions.
+              .admin-actions
+                a.btn.btn-admin-primary(href='/partners/admin/dashboard')
+                  i.fas.fa-tachometer-alt.me-2
+                  | Admin Dashboard
+                a.btn.btn-admin-outline(href='/partners/admin/partners')
+                  i.fas.fa-users.me-2
+                  | Manage Partners
+                a.btn.btn-admin-outline(href='/partners/admin/analytics')
+                  i.fas.fa-chart-bar.me-2
+                  | Analytics
+                a.btn.btn-admin-outline(href='/partners/admin/settings')
+                  i.fas.fa-cog.me-2
+                  | Settings
+
+    // Partnership Tiers Section
+    .partners-tiers-section
+      .container
+        .section-header
+          h2.section-title Partnership Tiers
+          p.section-subtitle Choose the partnership level that fits your business needs
+        .row
+          .col-lg-4
+            .tier-card.tier-bronze
+              .tier-header
+                .tier-icon
+                  i.fas.fa-medal
+                h3.tier-name Bronze Partner
+                .tier-price
+                  span.price Free
+                  span.period /month
+              .tier-features
+                ul
+                  li Basic partner resources
+                  li Community support
+                  li Standard training materials
+                  li Partner directory listing
+              .tier-cta
+                a.btn.btn-tier(href='/partners/register?tier=bronze') Get Started
+          .col-lg-4
+            .tier-card.tier-silver.featured
+              .tier-badge Most Popular
+              .tier-header
+                .tier-icon
+                  i.fas.fa-award
+                h3.tier-name Silver Partner
+                .tier-price
+                  span.price $299
+                  span.period /month
+              .tier-features
+                ul
+                  li All Bronze features
+                  li Priority support
+                  li Advanced training
+                  li Co-marketing opportunities
+                  li Revenue sharing (5%)
+              .tier-cta
+                a.btn.btn-tier.btn-tier-primary(href='/partners/register?tier=silver') Upgrade Now
+          .col-lg-4
+            .tier-card.tier-gold
+              .tier-header
+                .tier-icon
+                  i.fas.fa-crown
+                h3.tier-name Gold Partner
+                .tier-price
+                  span.price Custom
+                  span.period pricing
+              .tier-features
+                ul
+                  li All Silver features
+                  li Dedicated account manager
+                  li Custom integrations
+                  li Higher revenue sharing (10%)
+                  li Executive briefings
+              .tier-cta
+                a.btn.btn-tier(href='/partners/register?tier=gold') Contact Sales
+
+    // Success Stories Section
+    .partners-success-section
+      .container
+        .section-header
+          h2.section-title Partner Success Stories
+          p.section-subtitle See how our partners are growing their businesses
+        .row
+          .col-lg-4
+            .success-card
+              .success-logo
+                img(src='/static/images/partner-logo-1.png', alt='TechCorp', onerror="this.style.display='none'")
+                .fallback-logo TC
+              .success-content
+                h4 TechCorp Solutions
+                p.success-quote "Partnering with AT&T increased our revenue by 300% in the first year."
+                .success-metrics
+                  .metric
+                    span.metric-value 300%
+                    span.metric-label Revenue Growth
+                  .metric
+                    span.metric-value $2.5M
+                    span.metric-label Annual Revenue
+          .col-lg-4
+            .success-card
+              .success-logo
+                img(src='/static/images/partner-logo-2.png', alt='DataFlow', onerror="this.style.display='none'")
+                .fallback-logo DF
+              .success-content
+                h4 DataFlow Analytics
+                p.success-quote "The support and resources provided helped us scale to 50+ enterprise clients."
+                .success-metrics
+                  .metric
+                    span.metric-value 50+
+                    span.metric-label Enterprise Clients
+                  .metric
+                    span.metric-value 150%
+                    span.metric-label Client Growth
+          .col-lg-4
+            .success-card
+              .success-logo
+                img(src='/static/images/partner-logo-3.png', alt='CloudTech', onerror="this.style.display='none'")
+                .fallback-logo CT
+              .success-content
+                h4 CloudTech Innovations
+                p.success-quote "AT&T's technology integration capabilities transformed our service offerings."
+                .success-metrics
+                  .metric
+                    span.metric-value 5x
+                    span.metric-label Service Expansion
+                  .metric
+                    span.metric-value 99.9%
+                    span.metric-label Uptime
+
+    // Resources Section
+    .partners-resources-section
+      .container
+        .section-header
+          h2.section-title Partner Resources
+          p.section-subtitle Everything you need to succeed as an AT&T partner
+        .row
+          .col-lg-3.col-md-6
+            .resource-card
+              .resource-icon
+                i.fas.fa-book
+              h4.resource-title Documentation
+              p.resource-description Comprehensive guides and API documentation
+              a.resource-link(href='#') View Docs →
+          .col-lg-3.col-md-6
+            .resource-card
+              .resource-icon
+                i.fas.fa-graduation-cap
+              h4.resource-title Training
+              p.resource-description Certification programs and skill development
+              a.resource-link(href='#') Start Learning →
+          .col-lg-3.col-md-6
+            .resource-card
+              .resource-icon
+                i.fas.fa-tools
+              h4.resource-title Tools
+              p.resource-description Development tools and integration kits
+              a.resource-link(href='#') Access Tools →
+          .col-lg-3.col-md-6
+            .resource-card
+              .resource-icon
+                i.fas.fa-users
+              h4.resource-title Community
+              p.resource-description Connect with other partners and experts
+              a.resource-link(href='#') Join Community →
+
+    // CTA Section
+    .partners-cta-section
+      .container
+        .cta-content
+          h2.cta-title Ready to Partner with AT&T?
+          p.cta-description Join thousands of successful partners and start growing your business today.
+          .cta-buttons
+            a.btn.btn-cta-primary.btn-lg(href='/partners/register')
+              i.fas.fa-rocket.me-2
+              | Start Your Partnership
+            a.btn.btn-cta-outline.btn-lg(href='/partners/contact')
+              i.fas.fa-phone.me-2
+              | Contact Sales
+
+    // Partners Footer
+    footer.partners-footer
+      .footer-container
+        .footer-content
+          .footer-section
+            h4.footer-title Partner Resources
+            ul.footer-links
+              li: a(href='#') Partner Portal
+              li: a(href='#') Documentation
+              li: a(href='#') Training Materials
+              li: a(href='#') Support Center
+              li: a(href='#') Partner Directory
+          
+          .footer-section
+            h4.footer-title Programs
+            ul.footer-links
+              li: a(href='#') Technology Partners
+              li: a(href='#') Channel Partners
+              li: a(href='#') Solution Partners
+              li: a(href='#') Integration Partners
+              li: a(href='#') Referral Program
+          
+          .footer-section
+            h4.footer-title Support
+            ul.footer-links
+              li: a(href='#') Partner Support
+              li: a(href='#') Technical Support
+              li: a(href='#') Account Management
+              li: a(href='#') Billing Support
+              li: a(href='#') Partner Success
+          
+          .footer-section
+            h4.footer-title Legal
+            ul.footer-links
+              li: a(href='#') Partner Agreement
+              li: a(href='#') Terms of Service
+              li: a(href='#') Privacy Policy
+              li: a(href='#') Compliance
+              li: a(href='#') Legal Notices
+          
+          .footer-section
+            h4.footer-title Connect
+            ul.footer-links
+              li: a(href='#') Partner Events
+              li: a(href='#') Newsletter
+              li: a(href='#') Community
+              li: a(href='#') Partner Blog
+              li: a(href='#') Contact Us
+        
+        .footer-bottom
+          .footer-bottom-content
+            p.footer-copyright © 2024 AT&T Partner Portal. All rights reserved.
+            .footer-bottom-links
+              a(href='#') Privacy
+              a(href='#') Terms
+              a(href='#') Accessibility
+              a(href='#') Sitemap

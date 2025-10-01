@@ -303,6 +303,262 @@ app.get('/', async (req, res, next) => {
 	}
 })
 
+app.get('/partners', async (req, res, next) => {
+	try {
+		res.render('partners-landing', {
+			title: 'Partner Portal',
+			user: req.oidc && req.oidc.user,
+			userTier: req.userTier,
+			userPermissions: req.userPermissions
+		})
+	} catch (err) {
+		console.log(err)
+		next(err)
+	}
+})
+
+// Partners registration page
+app.get('/partners/register', (req, res) => {
+	res.render('partners-register', {
+		title: 'Partner Portal',
+		user: req.oidc && req.oidc.user,
+		userTier: req.userTier,
+		userPermissions: req.userPermissions,
+		formData: req.session.registrationFormData || {},
+		success: req.query.success === 'true',
+		error: req.query.error
+	})
+})
+
+// Handle partners registration form submission
+app.post('/partners/register', async (req, res) => {
+	try {
+		const {
+			orgName,
+			orgDomain,
+			contactFirstName,
+			contactLastName,
+			contactEmail,
+			agreeTerms,
+			agreePrivacy,
+			agreeMarketing
+		} = req.body;
+
+		// Debug: Log all form data
+		console.log('=== PARTNER REGISTRATION DEBUG ===');
+		console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+		console.log('Parsed form data:', {
+			orgName,
+			orgDomain,
+			contactFirstName,
+			contactLastName,
+			contactEmail,
+			agreeTerms,
+			agreePrivacy,
+			agreeMarketing
+		});
+		console.log('=== END DEBUG ===');
+
+		// Validate required fields (only essential fields for org creation)
+		if (!orgName || !orgDomain || !contactFirstName || !contactLastName || !contactEmail) {
+			req.session.registrationFormData = req.body;
+			return res.redirect('/partners/register?error=' + encodeURIComponent('Please fill in all required fields'));
+		}
+
+		if (!agreeTerms || !agreePrivacy) {
+			req.session.registrationFormData = req.body;
+			return res.redirect('/partners/register?error=' + encodeURIComponent('You must agree to the terms and privacy policy'));
+		}
+
+		// Get Auth0 Management API token
+		const token = await getManagementApiToken();
+
+		// Create Auth0 Organization (minimal payload for testing)
+		const organizationData = {
+			name: orgName.toLowerCase().replace(/[^a-z0-9-]/g, '-'), // Auth0 requires lowercase, alphanumeric, hyphens only
+			display_name: orgName
+		};
+
+		// Store metadata separately for debugging (not sent to Auth0)
+		const debugMetadata = {
+			orgDomain: String(orgDomain || ''),
+			contactFirstName: String(contactFirstName || ''),
+			contactLastName: String(contactLastName || ''),
+			contactEmail: String(contactEmail || ''),
+			agreeMarketing: String(agreeMarketing === 'on' ? 'true' : 'false'),
+			registrationDate: String(new Date().toISOString())
+		};
+
+		console.log('Creating Auth0 organization with data:', JSON.stringify(organizationData, null, 2));
+		console.log('Debug metadata (not sent to Auth0):', JSON.stringify(debugMetadata, null, 2));
+		console.log('Auth0 Management API URL:', `${process.env.MGMT_BASE_URL}/api/v2/organizations`);
+		console.log('Auth0 Management API Token (first 20 chars):', token.substring(0, 20) + '...');
+
+		// Create the organization
+		const orgResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations`,
+			organizationData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const organizationId = orgResponse.data.id;
+		console.log('Created organization with ID:', organizationId);
+
+		// Create a dedicated connection for this organization
+		const connectionName = `${orgName.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-connection`;
+		const connectionData = {
+			name: connectionName,
+			strategy: 'auth0',
+			options: {
+				passwordPolicy: 'good',
+				brute_force_protection: true,
+				disable_signup: false,
+				requires_username: false
+			},
+			enabled_clients: [process.env.CLIENT_ID] // Automatically assign to our application
+		};
+
+		console.log('Creating Auth0 connection:', JSON.stringify(connectionData, null, 2));
+		console.log('Auth0 Connections API URL:', `${process.env.MGMT_BASE_URL}/api/v2/connections`);
+
+		const connectionResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/connections`,
+			connectionData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const connectionId = connectionResponse.data.id;
+		console.log('Created connection with ID:', connectionId);
+
+		// Enable the connection for our client
+		console.log('Enabling connection for client:', process.env.CLIENT_ID);
+		await axios.patch(
+			`${process.env.MGMT_BASE_URL}/api/v2/connections/${connectionId}`,
+			{
+				enabled_clients: [process.env.CLIENT_ID]
+			},
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+		console.log('Successfully enabled connection for client');
+
+		// Enable the connection for the organization
+		console.log('Enabling connection for organization:', organizationId);
+		await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations/${organizationId}/enabled_connections`,
+			{
+				connection_id: connectionId,
+				assign_membership_on_login: true,
+				show_as_button: true
+			},
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+		console.log('Successfully enabled connection for organization');
+
+		// Send member invitation instead of creating user directly
+		const invitationData = {
+			inviter: {
+				name: "AT&T Partner Portal"
+			},
+			invitee: {
+				email: String(contactEmail)
+			},
+			client_id: process.env.CLIENT_ID,
+			connection_id: connectionId,
+			app_metadata: {
+				organizationId: String(organizationId),
+				organizationName: String(orgName),
+				agreeMarketing: String(agreeMarketing === 'on' ? 'true' : 'false')
+			},
+			user_metadata: {
+				firstName: String(contactFirstName),
+				lastName: String(contactLastName)
+			},
+			ttl_sec: 604800, // 7 days
+			send_invitation_email: true
+		};
+
+		console.log('Sending organization invitation with data:', JSON.stringify(invitationData, null, 2));
+		console.log('Auth0 Invitations API URL:', `${process.env.MGMT_BASE_URL}/api/v2/organizations/${organizationId}/invitations`);
+
+		const invitationResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations/${organizationId}/invitations`,
+			invitationData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const invitationId = invitationResponse.data.id;
+		console.log('Successfully sent invitation with ID:', invitationId);
+
+		console.log('Successfully created organization and sent invitation');
+
+		// Clear form data from session
+		delete req.session.registrationFormData;
+
+		// Redirect to success page
+		res.redirect('/partners/register?success=true');
+
+	} catch (error) {
+		console.error('Error creating partner organization:', error);
+		
+		// Store form data in session for re-population
+		req.session.registrationFormData = req.body;
+		
+		let errorMessage = 'An error occurred while creating your organization. Please try again.';
+		
+		if (error.response) {
+			console.error('Auth0 API Error Response:', {
+				status: error.response.status,
+				statusText: error.response.statusText,
+				data: error.response.data,
+				headers: error.response.headers
+			});
+			
+			if (error.response.data) {
+				errorMessage = error.response.data.message || error.response.data.error_description || errorMessage;
+			}
+		} else if (error.request) {
+			console.error('Auth0 API Request Error:', error.request);
+			errorMessage = 'Unable to connect to authentication service. Please try again.';
+		} else {
+			console.error('General Error:', error.message);
+		}
+		
+		res.redirect('/partners/register?error=' + encodeURIComponent(errorMessage));
+	}
+})
+
+// Partners-specific login route that redirects back to /partners
+app.get('/partners/login', (req, res) => {
+	res.oidc.login({
+		returnTo: '/partners'
+	})
+})
+
 app.get('/force-refresh', requiresAuth(), (req, res) => {
   // Force a complete logout/login to refresh tokens
   res.oidc.logout({
