@@ -200,11 +200,24 @@ app.use(async (req, res, next) => {
       // Permissions come from the access token via Auth0 Roles and Permissions
       // No need to check app_metadata as permissions are managed through Auth0's RBAC system
       
+      console.log('RBAC Middleware - User permissions:', permissions);
+      console.log('RBAC Middleware - User ID:', req.oidc.user?.sub);
+      console.log('RBAC Middleware - Access token exists:', !!req.oidc.accessToken);
+      console.log('RBAC Middleware - ID token exists:', !!req.oidc.idToken);
+      console.log('RBAC Middleware - Organization context:', {
+        orgId: req.oidc.idTokenClaims?.org_id,
+        orgName: req.oidc.idTokenClaims?.org_name
+      });
+      
       // Determine user tier based on permissions
       if (permissions.includes('sub:premium')) {
         userTier = 'premium';
       } else if (permissions.includes('sub:basic')) {
         userTier = 'subscriber';
+      } else if (permissions.includes('org-admin')) {
+        userTier = 'org-admin';
+      } else if (permissions.includes('org-user')) {
+        userTier = 'org-user';
       }
       
       // Set up FGA tier permissions for authenticated users
@@ -587,11 +600,20 @@ app.get('/partners/login', (req, res) => {
 		authorizationParams: {
 			organization: req.query.organization, // Organization will be passed via query param
 			// Add connection hint to automatically select the right database
-			connection: req.query.connection || undefined
+			connection: req.query.connection || undefined,
+      invitation: req.query.invitation,
+			// Ensure audience and scope are included for access token generation
+			audience: process.env.AUDIENCE,
+			scope: process.env.SCOPE
 		}
 	}
 	
 	console.log('Partners login with options:', loginOptions)
+	console.log('Partners login - Environment config:', {
+		SCOPE: process.env.SCOPE,
+		AUDIENCE: process.env.AUDIENCE,
+		RESPONSE_TYPE: process.env.RESPONSE_TYPE
+	})
 	res.oidc.login(loginOptions)
 })
 
@@ -707,6 +729,9 @@ app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
 		const orgName = req.oidc.idTokenClaims?.org_name
 		
 		console.log('Dashboard - User org info:', { orgId, orgName, userId: user.sub })
+		console.log('Dashboard - User access token claims:', req.oidc.accessTokenClaims)
+		console.log('Dashboard - User ID token claims:', req.oidc.idTokenClaims)
+		console.log('Dashboard - User tier from middleware:', req.userTier)
 		
 		if (!orgId) {
 			return res.status(400).render('error', {
@@ -901,6 +926,23 @@ app.post('/partners/dashboard/invite', requiresAuth(), async (req, res) => {
 		})
 	}
 })
+
+// Debug route to test different scopes for organization users
+app.get('/partners/debug-scopes', (req, res) => {
+	const testScopes = [
+		'openid profile email',
+		'openid profile email read:current_user',
+		'openid profile email read:organizations',
+		'openid profile email read:current_user read:organizations'
+	];
+	
+	res.render('debug-scopes', {
+		title: 'Partner Portal - Scope Debug',
+		testScopes: testScopes,
+		currentScope: process.env.SCOPE,
+		currentAudience: process.env.AUDIENCE
+	});
+});
 
 app.get('/force-refresh', requiresAuth(), (req, res) => {
   // Force a complete logout/login to refresh tokens
