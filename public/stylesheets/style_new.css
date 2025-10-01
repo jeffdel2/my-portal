@@ -1097,7 +1097,7 @@ p.user {
   }
   
   .cart .text-wrapper-8 {
-    color: #ffffff;
+    color: #2c3e50;
     font-family: "Arial", sans-serif;
     font-size: 18px;
     font-weight: 500;
@@ -1679,7 +1679,7 @@ p {
     border-radius: 8px;
     padding: 15px;
     box-shadow: 0 1px 5px rgba(0,0,0,0.3);
-    color: #ffffff;
+    color: #2c3e50;
 }
 
 .card h5 {
@@ -1940,12 +1940,12 @@ hr {
 .upgrade-page {
     padding: 40px 0;
     background: #1a1a1a;
-    color: #ffffff;
+    color: #2c3e50;
     min-height: 100vh;
 }
 
 .upgrade-page h2 {
-    color: #ffffff;
+    color: #2c3e50;
     text-align: center;
     margin-bottom: 30px;
     font-weight: 700;
@@ -1973,7 +1973,7 @@ hr {
     transition: all 0.3s ease;
     height: 100%;
     position: relative;
-    color: #ffffff;
+    color: #2c3e50;
 }
 
 .plan-card:hover {
@@ -2014,7 +2014,7 @@ hr {
 }
 
 .plan-header h3 {
-    color: #ffffff;
+    color: #2c3e50;
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 10px;
@@ -2073,7 +2073,7 @@ hr {
     border-radius: 12px;
     padding: 30px;
     text-align: center;
-    color: #ffffff;
+    color: #2c3e50;
 }
 
 .info-card h4 {
@@ -2462,7 +2462,7 @@ hr {
 /* Footer Styles */
 .footer {
     background-color: #1a1a1a;
-    color: #ffffff;
+    color: #2c3e50;
     padding: 60px 0 20px;
     margin-top: 80px;
 }
@@ -2486,7 +2486,7 @@ hr {
 }
 
 .footer-title {
-    color: #ffffff;
+    color: #2c3e50;
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 20px;
@@ -2572,7 +2572,7 @@ hr {
 }
 
 .mfa-optin-section .form-check-label {
-    color: #ffffff;
+    color: #2c3e50;
 }
 
 .mfa-optin-section .form-text {
@@ -2583,6 +2583,97 @@ hr {
 /* Partners Landing Page Styles */
 .partners-page {
     background: #f8f9fa;
+}
+
+/* Partners page container overrides for dark background */
+.partners-page .container {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
+.partners-page .section-title {
+    color: #ffffff;
+}
+
+.partners-page .section-subtitle {
+    color: #e0e0e0;
+}
+
+.partners-page .section-description {
+    color: #e0e0e0;
+}
+
+.partners-page h1, .partners-page h2, .partners-page h3, .partners-page h4, .partners-page h5, .partners-page h6 {
+    color: #ffffff;
+}
+
+.partners-page p {
+    color: #e0e0e0;
+}
+
+.partners-page .tier-name, .partners-page .tier-price {
+    color: #ffffff;
+}
+
+.partners-page .tier-features li {
+    color: #e0e0e0;
+}
+
+.partners-page .success-content h4 {
+    color: #ffffff;
+}
+
+.partners-page .success-quote {
+    color: #e0e0e0;
+}
+
+.partners-page .resource-title {
+    color: #ffffff;
+}
+
+.partners-page .resource-description {
+    color: #e0e0e0;
+}
+
+.partners-page .cta-title {
+    color: #ffffff;
+}
+
+.partners-page .cta-description {
+    color: #e0e0e0;
+}
+
+/* Partners page link overrides for dark background */
+.partners-page a {
+    color: #4a9eff;
+}
+
+.partners-page a:hover {
+    color: #66b3ff;
+}
+
+.partners-page .resource-link {
+    color: #4a9eff;
+}
+
+.partners-page .resource-link:hover {
+    color: #66b3ff;
+}
+
+.partners-page .footer-links a {
+    color: #e0e0e0;
+}
+
+.partners-page .footer-links a:hover {
+    color: #4a9eff;
+}
+
+.partners-page .footer-bottom-links a {
+    color: #b0b0b0;
+}
+
+.partners-page .footer-bottom-links a:hover {
+    color: #4a9eff;
 }
 
 /* Admin Section Styles */
