@@ -1,0 +1,203 @@
+extends layout
+
+block content
+  .partners-dashboard-page
+    .container
+      // Dashboard Header
+      .dashboard-header.mb-5
+        .row.align-items-center
+          .col-md-8
+            h1.dashboard-title Organization Dashboard
+            p.dashboard-subtitle Manage your organization members and settings
+          .col-md-4.text-end
+            .org-info
+              .org-badge
+                i.fas.fa-building.me-2
+                span= organization.display_name || orgName
+              .org-meta
+                small.text-muted #{members && members.length ? members.length : 0} member#{members && members.length !== 1 ? 's' : ''}
+
+      .row
+        // Left Column - Invite New User
+        .col-lg-4
+          .dashboard-card
+            .card-header
+              h3.card-title
+                i.fas.fa-user-plus.me-2
+                | Invite New User
+              p.card-subtitle Add a new member to your organization
+            
+            .card-body
+              form#inviteUserForm
+                .form-group.mb-3
+                  label.form-label(for="email") Email Address *
+                  input.form-control(
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    placeholder="user@example.com"
+                  )
+                
+                .form-group.mb-3
+                  label.form-label(for="role") Role
+                  select.form-control(id="role" name="role")
+                    option(value="org-user") Organization User
+                    option(value="org-admin") Organization Admin
+                
+                .form-actions
+                  button.btn.btn-primary.btn-lg.w-100(type="submit")
+                    i.fas.fa-paper-plane.me-2
+                    | Send Invitation
+                
+                .invite-status.mt-3
+                  #inviteSuccess.alert.alert-success(style="display: none;")
+                    i.fas.fa-check-circle.me-2
+                    span#successMessage
+                  
+                  #inviteError.alert.alert-danger(style="display: none;")
+                    i.fas.fa-exclamation-circle.me-2
+                    span#errorMessage
+
+        // Right Column - Organization Members
+        .col-lg-8
+          .dashboard-card
+            .card-header
+              h3.card-title
+                i.fas.fa-users.me-2
+                | Organization Members
+              p.card-subtitle Manage existing members of your organization
+            
+            .card-body
+              if members && Array.isArray(members) && members.length > 0
+                .members-list
+                  each member in members
+                    .member-item
+                      .member-avatar
+                        .avatar-circle
+                          = (member.name || member.email || member.user_id || 'U').charAt(0).toUpperCase()
+                      .member-info
+                        .member-name= member.name || member.email || member.user_id || 'Unknown User'
+                        .member-email= member.email || member.user_id || 'No email'
+                        .member-meta
+                          if member.last_login
+                            small.text-muted Last login: #{new Date(member.last_login).toLocaleDateString()}
+                          else
+                            small.text-muted Never logged in
+                      .member-actions
+                        .member-status
+                          if member.email_verified
+                            span.badge.badge-success
+                              i.fas.fa-check.me-1
+                              | Verified
+                          else
+                            span.badge.badge-warning
+                              i.fas.fa-clock.me-1
+                              | Pending
+                        .member-role
+                          if member.app_metadata && member.app_metadata.invitedRole
+                            span.badge.badge-info= member.app_metadata.invitedRole
+                          else if member.roles && member.roles.length > 0
+                            - var roleName = member.roles[0]
+                            - var displayRole = roleName === 'org-admin' ? 'Organization Admin' : roleName === 'org-user' ? 'Organization User' : roleName
+                            span.badge.badge-info= displayRole
+                          else
+                            span.badge.badge-secondary Organization User
+              else
+                .empty-state
+                  .empty-icon
+                    i.fas.fa-users
+                  h4.empty-title No Members Yet
+                  p.empty-description Start by inviting your first team member using the form on the left.
+
+      // Organization Settings (Future Enhancement)
+      .row.mt-5
+        .col-12
+          .dashboard-card
+            .card-header
+              h3.card-title
+                i.fas.fa-cog.me-2
+                | Organization Settings
+              p.card-subtitle Configure your organization preferences
+            
+            .card-body
+              .settings-grid
+                .setting-item
+                  .setting-icon
+                    i.fas.fa-shield-alt
+                  .setting-content
+                    h5.setting-title Security Settings
+                    p.setting-description Configure authentication and security policies
+                    button.btn.btn-outline-primary.btn-sm Manage Security
+                
+                .setting-item
+                  .setting-icon
+                    i.fas.fa-database
+                  .setting-content
+                    h5.setting-title Data Management
+                    p.setting-description Manage user data and privacy settings
+                    button.btn.btn-outline-primary.btn-sm Manage Data
+                
+                .setting-item
+                  .setting-icon
+                    i.fas.fa-chart-bar
+                  .setting-content
+                    h5.setting-title Analytics
+                    p.setting-description View organization usage and activity
+                    button.btn.btn-outline-primary.btn-sm View Analytics
+
+  // JavaScript for form handling
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('inviteUserForm');
+      const successAlert = document.getElementById('inviteSuccess');
+      const errorAlert = document.getElementById('inviteError');
+      const successMessage = document.getElementById('successMessage');
+      const errorMessage = document.getElementById('errorMessage');
+      
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Hide previous alerts
+        successAlert.style.display = 'none';
+        errorAlert.style.display = 'none';
+        
+        // Get form data
+        const formData = new FormData(form);
+        const data = {
+          email: formData.get('email'),
+          role: formData.get('role')
+        };
+        
+        try {
+          const response = await fetch('/partners/dashboard/invite', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            successMessage.textContent = result.message;
+            successAlert.style.display = 'block';
+            form.reset(); // Clear the form
+            
+            // Auto-hide success message after 5 seconds
+            setTimeout(() => {
+              successAlert.style.display = 'none';
+            }, 5000);
+          } else {
+            errorMessage.textContent = result.error;
+            errorAlert.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Error sending invitation:', error);
+          errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+          errorAlert.style.display = 'block';
+        }
+      });
+    });
+

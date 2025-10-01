@@ -95,6 +95,23 @@ const authConfig = {
 	},
 }
 
+// Partners-specific Auth0 configuration (same client, different organization context)
+const partnersAuthConfig = {
+	secret: process.env.SESSION_SECRET,
+	authRequired: false,
+	auth0Logout: true,
+	baseURL: process.env.APP_URL,
+	issuerBaseURL: process.env.ISSUER_BASE_URL,
+	clientID: process.env.CLIENT_ID, // Same client ID
+	clientSecret: process.env.CLIENT_SECRET, // Same client secret
+	authorizationParams: {
+		response_type: process.env.RESPONSE_TYPE,
+		audience: process.env.AUDIENCE,
+		scope: process.env.SCOPE,
+		// Organization context will be added dynamically in the login route
+	},
+}
+
 console.log("AUTHCONFIG",authConfig);
 
 //add-ons for header based authN
@@ -145,7 +162,11 @@ app.get('/callback', (req, res, next) => {
   next();
 });
 
+// Customer Auth0 middleware
 app.use(auth(authConfig))
+
+// Partners Auth0 middleware (for organization-specific routes)
+const partnersAuth = auth(partnersAuthConfig)
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -482,7 +503,7 @@ app.post('/partners/register', async (req, res) => {
 			invitee: {
 				email: String(contactEmail)
 			},
-			client_id: process.env.CLIENT_ID,
+			client_id: process.env.CLIENT_ID, // Same client ID for both flows
 			connection_id: connectionId,
 			app_metadata: {
 				organizationId: String(organizationId),
@@ -494,7 +515,13 @@ app.post('/partners/register', async (req, res) => {
 				lastName: String(contactLastName)
 			},
 			ttl_sec: 604800, // 7 days
-			send_invitation_email: true
+			send_invitation_email: true,
+			roles: ['org_admin'], // Assign admin role during invitation
+			// Add organization context to the invitation
+			organization: {
+				id: organizationId,
+				name: orgName
+			}
 		};
 
 		console.log('Sending organization invitation with data:', JSON.stringify(invitationData, null, 2));
@@ -554,9 +581,325 @@ app.post('/partners/register', async (req, res) => {
 
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
-	res.oidc.login({
-		returnTo: '/partners'
-	})
+	// Use partners-specific login with organization context
+	const loginOptions = {
+		returnTo: '/partners',
+		authorizationParams: {
+			organization: req.query.organization, // Organization will be passed via query param
+			// Add connection hint to automatically select the right database
+			connection: req.query.connection || undefined
+		}
+	}
+	
+	console.log('Partners login with options:', loginOptions)
+	res.oidc.login(loginOptions)
+})
+
+// Organization-specific login route for direct access
+app.get('/partners/login/:organizationId', (req, res) => {
+	const { organizationId } = req.params
+	const connectionName = req.query.connection
+	
+	// Redirect to partners login with organization context
+	const redirectUrl = `/partners/login?organization=${organizationId}${connectionName ? `&connection=${connectionName}` : ''}`
+	console.log('Redirecting to organization-specific login:', redirectUrl)
+	res.redirect(redirectUrl)
+})
+
+// Partners-specific tokens page
+app.get('/partners/tokens', requiresAuth(), (req, res) => {
+	try {
+		// Decode the tokens
+		const id_token_payload = req.oidc.idTokenClaims
+		const access_token_payload = req.oidc.accessTokenClaims
+		const refresh_token = req.oidc.refreshToken
+
+		// Get raw tokens
+		const id_token = req.oidc.idToken
+		const access_token = req.oidc.accessToken
+
+		res.render('tokens', {
+			title: 'Partner Portal',
+			user: req.oidc.user,
+			id_token_payload,
+			access_token_payload,
+			refresh_token,
+			id_token,
+			access_token,
+			userTier: req.userTier || 'unknown'
+		})
+	} catch (error) {
+		console.error('Error rendering partners tokens page:', error)
+		res.status(500).render('error', {
+			title: 'Partner Portal - Error',
+			message: 'Error loading token details',
+			error: error.message
+		})
+	}
+})
+
+// Partners-specific profile page
+app.get('/partners/profile', requiresAuth(), async (req, res) => {
+	try {
+		// Define the URLs for the two APIs you want to call
+		const token = await getManagementApiToken()
+		const userId = req.oidc.user.sub;
+		const authz_header = { Authorization: `Bearer ${token}` };
+		
+		const url1 = `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`;
+		const url2 = `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}/authentication-methods`;
+
+		console.log('Initiating API calls for partners profile...');
+
+		// Use Promise.all to make concurrent requests
+		const [response1, response2] = await Promise.all([
+			axios.get(url1, { headers: authz_header }),
+			axios.get(url2, { headers: authz_header })
+		]);
+
+		console.log('Both API calls completed successfully for partners profile!');
+
+		// You can now access the data from each response
+		const user = response1.data;
+		const factors = response2.data;
+		const userTier = req.userTier || 'unknown'
+		const userPermissions = req.userPermissions || []
+
+		// Check for profile update success message
+		const updated = req.query.updated === 'true'
+
+		const clientId = `${process.env.CLIENT_ID}`;
+		const mgmtUrl = `${process.env.MGMT_BASE_URL}`;
+		const issuerUrl = `${process.env.ISSUER_BASE_URL}`;
+		const appUrl = `${process.env.APP_URL}`;
+
+		res.render('profile2', {
+			title: 'Partner Portal',
+			user,
+			factors,
+			userTier,
+			userPermissions,
+			updated,
+			clientId,
+			issuerUrl,
+			mgmtUrl,
+			appUrl,
+			updateSuccess: updated
+		})
+	} catch (error) {
+		console.error('Error rendering partners profile page:', error)
+		res.status(500).render('error', {
+			title: 'Partner Portal - Error',
+			message: 'Error loading profile',
+			error: error.message
+		})
+	}
+})
+
+// Partners dashboard for org admins
+app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
+	try {
+		const user = req.oidc.user
+		const userTier = req.userTier || 'unknown'
+		
+		// Extract organization information from the user's ID token
+		const orgId = req.oidc.idTokenClaims?.org_id
+		const orgName = req.oidc.idTokenClaims?.org_name
+		
+		console.log('Dashboard - User org info:', { orgId, orgName, userId: user.sub })
+		
+		if (!orgId) {
+			return res.status(400).render('error', {
+				title: 'Partner Portal - Error',
+				message: 'No organization found in your account. Please contact support.',
+				error: 'Organization not found'
+			})
+		}
+		
+		// Get organization details and members
+		const token = await getManagementApiToken()
+		const authz_header = { Authorization: `Bearer ${token}` }
+		
+		// Fetch organization details and members
+		const [orgResponse, membersResponse] = await Promise.all([
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}`, { headers: authz_header }),
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/members`, { headers: authz_header })
+		])
+		
+		const organization = orgResponse.data
+		const members = membersResponse.data
+		
+		console.log('Dashboard - Organization data:', { 
+			orgName: organization.display_name, 
+			memberCount: members.length,
+			membersStructure: members
+		})
+		
+		res.render('partners-dashboard', {
+			title: 'Partner Portal',
+			user,
+			userTier,
+			organization,
+			members,
+			orgId,
+			orgName: organization.display_name
+		})
+		
+	} catch (error) {
+		console.error('Error loading partners dashboard:', error)
+		res.status(500).render('error', {
+			title: 'Partner Portal - Error',
+			message: 'Error loading dashboard',
+			error: error.message
+		})
+	}
+})
+
+// Handle user invitation from dashboard
+app.post('/partners/dashboard/invite', requiresAuth(), async (req, res) => {
+	try {
+		const { email, role } = req.body
+		const user = req.oidc.user
+		
+		// Extract organization information from the user's ID token
+		const orgId = req.oidc.idTokenClaims?.org_id
+		const orgName = req.oidc.idTokenClaims?.org_name
+		
+		console.log('Invite user - Org info:', { orgId, orgName, email, role })
+		
+		if (!orgId) {
+			return res.status(400).json({ 
+				success: false, 
+				error: 'No organization found in your account' 
+			})
+		}
+		
+		// Validate required fields
+		if (!email) {
+			return res.status(400).json({ 
+				success: false, 
+				error: 'Please provide an email address' 
+			})
+		}
+		
+		// Validate role IDs are configured
+		if (!process.env.ORG_ADMIN_ROLE_ID || !process.env.ORG_USER_ROLE_ID) {
+			console.error('Missing role IDs in environment variables:', {
+				ORG_ADMIN_ROLE_ID: process.env.ORG_ADMIN_ROLE_ID ? 'SET' : 'MISSING',
+				ORG_USER_ROLE_ID: process.env.ORG_USER_ROLE_ID ? 'SET' : 'MISSING'
+			})
+			return res.status(500).json({ 
+				success: false, 
+				error: 'Role configuration error. Please contact support.' 
+			})
+		}
+		
+		// Get Auth0 Management API token
+		const token = await getManagementApiToken()
+		const authz_header = { Authorization: `Bearer ${token}` }
+		
+		// Get organization details and enabled connections
+		const [orgResponse, connectionsResponse] = await Promise.all([
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}`, { headers: authz_header }),
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/enabled_connections`, { headers: authz_header })
+		])
+		
+		const organization = orgResponse.data
+		const enabledConnections = connectionsResponse.data
+		console.log('Organization details:', organization)
+		console.log('Enabled connections:', enabledConnections)
+		
+		// Use organization name from API response since orgName from token might be undefined
+		const orgDisplayName = organization.display_name || organization.name || orgName || 'organization'
+		
+		// Find the organization's connection ID (should be the one we created during registration)
+		const connectionName = `${orgDisplayName.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-connection`
+		const connection = enabledConnections.find(conn => conn.connection.name === connectionName)
+		
+		if (!connection) {
+			console.error('Connection not found:', { connectionName, enabledConnections })
+			return res.status(400).json({ 
+				success: false, 
+				error: 'Organization connection not found. Please contact support.' 
+			})
+		}
+		
+		const connectionId = connection.connection.id
+		console.log('Using connection ID:', { connectionName, connectionId })
+		
+		// Determine which role ID to use
+		const roleId = role === 'org-admin' ? process.env.ORG_ADMIN_ROLE_ID : process.env.ORG_USER_ROLE_ID
+		console.log('Using role ID:', { role, roleId })
+		
+		// Create invitation data
+		const invitationData = {
+			inviter: {
+				name: user.name || user.email
+			},
+			invitee: {
+				email: String(email)
+			},
+			client_id: process.env.CLIENT_ID,
+			connection_id: connectionId,
+			app_metadata: {
+				organizationId: String(orgId),
+				organizationName: String(orgDisplayName),
+				invitedBy: String(user.sub),
+				invitedRole: String(role || 'org-user')
+			},
+			user_metadata: {
+				invitedBy: String(user.name || user.email)
+			},
+			ttl_sec: 604800, // 7 days
+			send_invitation_email: true,
+			roles: [roleId] // Use role ID from environment variables
+		}
+		
+		console.log('Sending organization invitation:', JSON.stringify(invitationData, null, 2))
+		
+		// Send the invitation
+		const invitationResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/invitations`,
+			invitationData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		)
+		
+		const invitationId = invitationResponse.data.id
+		console.log('Successfully sent invitation with ID:', invitationId)
+		
+		res.json({ 
+			success: true, 
+			message: 'User invitation sent successfully!',
+			invitationId: invitationId
+		})
+		
+	} catch (error) {
+		console.error('Error sending user invitation:', error)
+		
+		let errorMessage = 'An error occurred while sending the invitation. Please try again.'
+		
+		if (error.response) {
+			console.error('Auth0 API Error Response:', {
+				status: error.response.status,
+				statusText: error.response.statusText,
+				data: error.response.data
+			})
+			
+			if (error.response.data) {
+				errorMessage = error.response.data.message || error.response.data.error_description || errorMessage
+			}
+		}
+		
+		res.status(500).json({ 
+			success: false, 
+			error: errorMessage 
+		})
+	}
 })
 
 app.get('/force-refresh', requiresAuth(), (req, res) => {

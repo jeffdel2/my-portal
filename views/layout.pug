@@ -92,12 +92,14 @@ html
                         //-    <i class="material-symbols-outlined" fontSize="large">shopping_cart</i>
                         if user
                             li
-                              a.header(href='/profile')=user.name
+                              a.header(href=title === 'Partner Portal' ? '/partners/profile' : '/profile')=user.name
                             if title === 'Partner Portal'
                               li
                                 a.header(href='/partners') Home
                               li
                                 a.header(href='/partners/dashboard') Dashboard
+                              li
+                                a.header(href='/partners/tokens') Tokens
                               li
                                 a.header(href='/partners/resources') Resources
                               li

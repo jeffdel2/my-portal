@@ -2,7 +2,7 @@ extends layout
 
 block content
   .container
-    // Welcome Header with Subscription Level
+    // Welcome Header
     if user
       .welcome-header.mb-4
         .row
@@ -11,16 +11,18 @@ block content
               .welcome-content
                 .welcome-row
                   h2.welcome-title Welcome back, #{user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : user.name || 'User'}!
-                  .subscription-info
-                    .subscription-badge(class=`subscription-${userTier}`)
-                      span.subscription-icon
-                        if userTier === 'premium'
-                          | ⭐
-                        else if userTier === 'subscriber'
-                          | 🔹
-                        else
-                          | 🔓
-                      span.subscription-text #{userTier.charAt(0).toUpperCase() + userTier.slice(1)} Tier
+                  // Only show tier information for customer flows, not partner flows
+                  if title !== 'Partner Portal'
+                    .subscription-info
+                      .subscription-badge(class=`subscription-${userTier}`)
+                        span.subscription-icon
+                          if userTier === 'premium'
+                            | ⭐
+                          else if userTier === 'subscriber'
+                            | 🔹
+                          else
+                            | 🔓
+                        span.subscription-text #{userTier.charAt(0).toUpperCase() + userTier.slice(1)} Tier
 
     if user
       .row.g-4
