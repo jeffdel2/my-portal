@@ -214,9 +214,9 @@ app.use(async (req, res, next) => {
         userTier = 'premium';
       } else if (permissions.includes('sub:basic')) {
         userTier = 'subscriber';
-      } else if (permissions.includes('org-admin')) {
+      } else if (permissions.includes('org:admin')) {
         userTier = 'org-admin';
-      } else if (permissions.includes('org-user')) {
+      } else if (permissions.includes('org:user')) {
         userTier = 'org-user';
       }
       
@@ -521,7 +521,8 @@ app.post('/partners/register', async (req, res) => {
 			app_metadata: {
 				organizationId: String(organizationId),
 				organizationName: String(orgName),
-				agreeMarketing: String(agreeMarketing === 'on' ? 'true' : 'false')
+				agreeMarketing: String(agreeMarketing === 'on' ? 'true' : 'false'),
+				invitedRole: 'org-admin' // Set the intended role for filtering
 			},
 			user_metadata: {
 				firstName: String(contactFirstName),
@@ -595,25 +596,41 @@ app.post('/partners/register', async (req, res) => {
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
 	// Use partners-specific login with organization context
-	const loginOptions = {
-		returnTo: '/partners',
-		authorizationParams: {
-			organization: req.query.organization, // Organization will be passed via query param
-			// Add connection hint to automatically select the right database
-			connection: req.query.connection || undefined,
-      invitation: req.query.invitation,
-			// Ensure audience and scope are included for access token generation
-			audience: process.env.AUDIENCE,
-			scope: process.env.SCOPE
-		}
+	const authorizationParams = {
+		// Ensure audience and scope are included for access token generation
+		audience: process.env.AUDIENCE,
+		scope: process.env.SCOPE
 	}
 	
-	console.log('Partners login with options:', loginOptions)
+	// Only add organization if provided
+	if (req.query.organization) {
+		authorizationParams.organization = req.query.organization
+	}
+	
+	// Only add connection if provided
+	if (req.query.connection) {
+		authorizationParams.connection = req.query.connection
+	}
+	
+	// Only add invitation if provided
+	if (req.query.invitation) {
+		authorizationParams.invitation = req.query.invitation
+	}
+	
+	const loginOptions = {
+		returnTo: '/partners',
+		authorizationParams: authorizationParams
+	}
+	
+	console.log('Partners login with options:', JSON.stringify(loginOptions, null, 2))
 	console.log('Partners login - Environment config:', {
 		SCOPE: process.env.SCOPE,
 		AUDIENCE: process.env.AUDIENCE,
 		RESPONSE_TYPE: process.env.RESPONSE_TYPE
 	})
+	console.log('Partners login - Query params:', req.query)
+	console.log('Partners login - Main authConfig authorizationParams:', authConfig.authorizationParams)
+	
 	res.oidc.login(loginOptions)
 })
 
@@ -631,20 +648,51 @@ app.get('/partners/login/:organizationId', (req, res) => {
 // Partners-specific tokens page
 app.get('/partners/tokens', requiresAuth(), (req, res) => {
 	try {
-		// Decode the tokens
-		const id_token_payload = req.oidc.idTokenClaims
-		const access_token_payload = req.oidc.accessTokenClaims
-		const refresh_token = req.oidc.refreshToken
-
+		// Debug: Log what's available in req.oidc
+		console.log('Partners tokens page - req.oidc keys:', Object.keys(req.oidc))
+		console.log('Partners tokens page - req.oidc.accessToken:', req.oidc.accessToken)
+		console.log('Partners tokens page - req.oidc.accessToken.access_token:', req.oidc.accessToken?.access_token)
+		
+		// Decode JWT tokens to display their contents (same approach as regular tokens page)
+		let idTokenPayload = null;
+		let accessTokenPayload = null;
+		
+		try {
+			if (req.oidc.idToken) {
+				const idTokenParts = req.oidc.idToken.split('.');
+				if (idTokenParts.length === 3) {
+					const payload = idTokenParts[1];
+					const decodedPayload = Buffer.from(payload, 'base64').toString('utf-8');
+					idTokenPayload = JSON.parse(decodedPayload);
+				}
+			}
+		} catch (error) {
+			console.error('Error decoding ID token:', error);
+		}
+		
+		try {
+			if (req.oidc.accessToken && req.oidc.accessToken.access_token) {
+				const accessTokenParts = req.oidc.accessToken.access_token.split('.');
+				if (accessTokenParts.length === 3) {
+					const payload = accessTokenParts[1];
+					const decodedPayload = Buffer.from(payload, 'base64').toString('utf-8');
+					accessTokenPayload = JSON.parse(decodedPayload);
+				}
+			}
+		} catch (error) {
+			console.error('Error decoding access token:', error);
+		}
+		
 		// Get raw tokens
 		const id_token = req.oidc.idToken
 		const access_token = req.oidc.accessToken
+		const refresh_token = req.oidc.refreshToken
 
 		res.render('tokens', {
 			title: 'Partner Portal',
 			user: req.oidc.user,
-			id_token_payload,
-			access_token_payload,
+			id_token_payload: idTokenPayload,
+			access_token_payload: accessTokenPayload,
 			refresh_token,
 			id_token,
 			access_token,
@@ -745,27 +793,88 @@ app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
 		const token = await getManagementApiToken()
 		const authz_header = { Authorization: `Bearer ${token}` }
 		
-		// Fetch organization details and members
-		const [orgResponse, membersResponse] = await Promise.all([
+		// Fetch organization details, members, and invitations
+		const [orgResponse, membersResponse, invitationsResponse] = await Promise.all([
 			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}`, { headers: authz_header }),
-			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/members`, { headers: authz_header })
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/members`, { headers: authz_header }),
+			axios.get(`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/invitations`, { headers: authz_header })
 		])
 		
 		const organization = orgResponse.data
-		const members = membersResponse.data
+		const allMembers = membersResponse.data
+		const allInvitations = invitationsResponse.data
+		
+		// Filter to only show org users (hide other org admins)
+		// If current user is org admin, they should only see org users
+		// If current user is org user, they shouldn't see the dashboard at all (this should be handled by route protection)
+		let members = allMembers
+		let invitations = allInvitations
+		
+		// If current user is org admin, filter out other org admins
+		if (req.userPermissions && req.userPermissions.includes('org:admin')) {
+			console.log('Current user is org admin - filtering other org admins from view')
+			
+			// Since we can't easily get other users' access tokens to check their permissions,
+			// we'll use a different approach: check the user metadata for the intended role
+			// that was set during invitation
+			const membersWithRoleInfo = await Promise.all(
+				allMembers.map(async (member) => {
+					try {
+						const userResponse = await axios.get(
+							`${process.env.MGMT_BASE_URL}/api/v2/users/${member.user_id}`, 
+							{ headers: authz_header }
+						)
+						
+						// Check app_metadata for the intended role from invitation
+						const intendedRole = userResponse.data.app_metadata?.invitedRole
+						const isOrgAdmin = intendedRole === 'org-admin' || intendedRole === 'org:admin'
+						
+						console.log(`User ${member.email} - intendedRole: ${intendedRole}, isOrgAdmin: ${isOrgAdmin}`)
+						
+						return {
+							...member,
+							intendedRole: intendedRole,
+							isOrgAdmin: isOrgAdmin
+						}
+					} catch (error) {
+						console.error(`Error fetching user data for ${member.user_id}:`, error.message)
+						return {
+							...member,
+							intendedRole: null,
+							isOrgAdmin: false // Default to showing them if we can't determine
+						}
+					}
+				})
+			)
+			
+			// Filter out other org admins (keep current user and org users)
+			members = membersWithRoleInfo.filter(member => 
+				member.user_id === user.sub || !member.isOrgAdmin
+			)
+			
+			console.log(`Filtered members: ${members.length} (removed ${allMembers.length - members.length} org admins)`)
+		}
 		
 		console.log('Dashboard - Organization data:', { 
 			orgName: organization.display_name, 
 			memberCount: members.length,
-			membersStructure: members
+			invitationCount: invitations.length,
+			membersStructure: members,
+			invitationsStructure: invitations
 		})
+		
+		// Debug: Log current user's permissions
+		console.log('Dashboard - Current user permissions:', req.userPermissions)
+		console.log('Dashboard - Current user tier:', req.userTier)
 		
 		res.render('partners-dashboard', {
 			title: 'Partner Portal',
 			user,
 			userTier,
+			userPermissions: req.userPermissions,
 			organization,
 			members,
+			invitations,
 			orgId,
 			orgName: organization.display_name
 		})
