@@ -404,6 +404,13 @@ app.post('/partners/register', async (req, res) => {
 			return res.redirect('/partners/register?error=' + encodeURIComponent('You must agree to the terms and privacy policy'));
 		}
 
+		// Validate required environment variables
+		if (!process.env.ORG_ADMIN_ROLE_ID) {
+			console.error('ORG_ADMIN_ROLE_ID environment variable is not set');
+			req.session.registrationFormData = req.body;
+			return res.redirect('/partners/register?error=' + encodeURIComponent('Server configuration error: Admin role ID not configured'));
+		}
+
 		// Get Auth0 Management API token
 		const token = await getManagementApiToken();
 
@@ -530,12 +537,7 @@ app.post('/partners/register', async (req, res) => {
 			},
 			ttl_sec: 604800, // 7 days
 			send_invitation_email: true,
-			roles: ['org_admin'], // Assign admin role during invitation
-			// Add organization context to the invitation
-			organization: {
-				id: organizationId,
-				name: orgName
-			}
+			roles: [process.env.ORG_ADMIN_ROLE_ID] // Use actual role ID instead of role name
 		};
 
 		console.log('Sending organization invitation with data:', JSON.stringify(invitationData, null, 2));
