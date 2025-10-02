@@ -110,7 +110,7 @@ block content
                   p.empty-description Members will appear here once they accept their invitations.
 
           // Pending Invitations Section
-          .dashboard-card
+          .dashboard-card.mb-4
             .card-header
               h3.card-title
                 i.fas.fa-envelope.me-2
@@ -147,6 +147,82 @@ block content
                     i.fas.fa-envelope
                   h4.empty-title No Pending Invitations
                   p.empty-description All invitations have been accepted or none have been sent yet.
+
+            // Self-Service SSO Section (Only for org-admins)
+            if userPermissions && userPermissions.includes('org:admin')
+              .dashboard-card
+                .card-header
+                  h3.card-title
+                    i.fas.fa-shield-alt.me-2
+                    | Self-Service SSO
+                  p.card-subtitle Enable enterprise identity provider connections for your organization
+                
+                .card-body
+                  .sso-info.mb-4
+                    .alert.alert-info
+                      i.fas.fa-info-circle.me-2
+                      | Connect your organization's existing identity provider (like Active Directory, Okta, or Google Workspace) to enable seamless single sign-on for all your users.
+                  
+                  .sso-request-section.text-center
+                    .sso-icon.mb-3
+                      i.fas.fa-shield-alt.fa-3x.text-primary
+                    
+                    h5.mb-3 Enable Self-Service SSO
+                      p.text-muted.mb-4
+                        | Request access to configure your organization's enterprise identity provider.
+                    
+                  button#ssoRequestBtn.btn.btn-primary.btn-lg(type="button")
+                    i.fas.fa-rocket.me-2
+                    | Request SSO Access
+                  
+                  .sso-status.mt-4
+                    #ssoSuccess.alert.alert-success(style="display: none;")
+                      i.fas.fa-check-circle.me-2
+                      span#ssoSuccessMessage
+                      .mt-3
+                        strong Ticket ID: 
+                        span#ssoTicketId.text-monospace
+                        .mt-2
+                          a#ssoTicketLink.btn.btn-outline-success.btn-sm(href="#", target="_blank", style="display: none;")
+                            i.fas.fa-external-link-alt.me-1
+                            | Access IDP Onboarding Ticket
+                    
+                    #ssoError.alert.alert-danger(style="display: none;")
+                      i.fas.fa-exclamation-circle.me-2
+                      span#ssoErrorMessage
+                  
+                  // Persistent Ticket Display
+                  #ssoTicketDisplay.card.mt-4(style="display: none;")
+                    .card-header.bg-info.text-white.d-flex.justify-content-between.align-items-center
+                      h6.mb-0
+                        i.fas.fa-ticket-alt.me-2
+                        | Active SSO Ticket
+                      button#clearTicketBtn.btn.btn-sm.btn-outline-light(type="button")
+                        i.fas.fa-times.me-1
+                        | Clear
+                    .card-body
+                      .row
+                        .col-md-6
+                          .mb-2
+                            strong.text-muted Ticket ID:
+                            .text-monospace.bg-light.p-2.rounded.mt-1#persistentTicketId
+                          .mb-2
+                            strong.text-muted Status:
+                            .badge.bg-warning.text-dark.mt-1#ticketStatus Pending
+                        .col-md-6
+                          .mb-2
+                            strong.text-muted Created:
+                            .text-muted.mt-1#ticketCreated
+                          .mb-2
+                            strong.text-muted Action:
+                            .mt-1
+                              a#persistentTicketLink.btn.btn-primary.btn-sm(href="#", target="_blank")
+                                i.fas.fa-external-link-alt.me-1
+                                | Access IDP Onboarding
+                      .mt-3.p-2.bg-light.rounded
+                        .small.text-muted
+                          i.fas.fa-info-circle.me-1
+                          | This ticket will remain active until you clear it or complete the IDP onboarding process.
 
       // Organization Settings (Future Enhancement)
       .row.mt-5
@@ -237,5 +313,122 @@ block content
           errorAlert.style.display = 'block';
         }
       });
+
+      // SSO Request Button Handling
+      const ssoRequestBtn = document.getElementById('ssoRequestBtn');
+      
+      if (ssoRequestBtn) {
+        const ssoSuccessAlert = document.getElementById('ssoSuccess');
+        const ssoErrorAlert = document.getElementById('ssoError');
+        const ssoSuccessMessage = document.getElementById('ssoSuccessMessage');
+        const ssoErrorMessage = document.getElementById('ssoErrorMessage');
+        
+        ssoRequestBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          
+          // Disable button and show loading state
+          ssoRequestBtn.disabled = true;
+          ssoRequestBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+          
+          // Hide previous alerts
+          ssoSuccessAlert.style.display = 'none';
+          ssoErrorAlert.style.display = 'none';
+          
+          try {
+            const response = await fetch('/partners/dashboard/sso-request', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({})
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              ssoSuccessMessage.textContent = result.message;
+              
+              // Display ticket information if available
+              if (result.ticketId) {
+                document.getElementById('ssoTicketId').textContent = result.ticketId;
+                
+                // Use the Auth0 ticket URL returned from the server
+                if (result.ticketUrl) {
+                  const ticketLink = document.getElementById('ssoTicketLink');
+                  ticketLink.href = result.ticketUrl;
+                  ticketLink.textContent = 'Access IDP Onboarding Ticket';
+                  ticketLink.style.display = 'inline-block';
+                  
+                  // Store ticket info in localStorage for persistence
+                  const ticketInfo = {
+                    ticketId: result.ticketId,
+                    ticketUrl: result.ticketUrl,
+                    createdAt: new Date().toISOString(),
+                    status: 'pending'
+                  };
+                  localStorage.setItem('ssoTicket', JSON.stringify(ticketInfo));
+                  
+                  // Show persistent ticket display
+                  showPersistentTicket(ticketInfo);
+                }
+              }
+              
+              ssoSuccessAlert.style.display = 'block';
+              
+              // Auto-hide success message after 5 seconds (ticket info is now persistent)
+              setTimeout(() => {
+                ssoSuccessAlert.style.display = 'none';
+              }, 5000);
+            } else {
+              ssoErrorMessage.textContent = result.error;
+              ssoErrorAlert.style.display = 'block';
+            }
+        } catch (error) {
+          ssoErrorMessage.textContent = 'An unexpected error occurred. Please try again.';
+          ssoErrorAlert.style.display = 'block';
+        } finally {
+            // Re-enable button
+            ssoRequestBtn.disabled = false;
+            ssoRequestBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Request SSO Access';
+          }
+        });
+      }
+      
+      // Function to show persistent ticket display
+      function showPersistentTicket(ticketInfo) {
+        const ticketDisplay = document.getElementById('ssoTicketDisplay');
+        const persistentTicketId = document.getElementById('persistentTicketId');
+        const persistentTicketLink = document.getElementById('persistentTicketLink');
+        const ticketCreated = document.getElementById('ticketCreated');
+        
+        persistentTicketId.textContent = ticketInfo.ticketId;
+        persistentTicketLink.href = ticketInfo.ticketUrl;
+        ticketCreated.textContent = new Date(ticketInfo.createdAt).toLocaleString();
+        
+        ticketDisplay.style.display = 'block';
+      }
+      
+      // Function to clear persistent ticket
+      function clearPersistentTicket() {
+        localStorage.removeItem('ssoTicket');
+        document.getElementById('ssoTicketDisplay').style.display = 'none';
+      }
+      
+      // Check for existing ticket on page load
+      const existingTicket = localStorage.getItem('ssoTicket');
+      if (existingTicket) {
+        try {
+          const ticketInfo = JSON.parse(existingTicket);
+          showPersistentTicket(ticketInfo);
+        } catch (error) {
+          localStorage.removeItem('ssoTicket');
+        }
+      }
+      
+      // Handle clear ticket button
+      const clearTicketBtn = document.getElementById('clearTicketBtn');
+      if (clearTicketBtn) {
+        clearTicketBtn.addEventListener('click', clearPersistentTicket);
+      }
     });
 

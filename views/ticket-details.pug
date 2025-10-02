@@ -1,0 +1,67 @@
+extends layout
+
+block content
+  .container.mt-4
+    .row.justify-content-center
+      .col-lg-8
+        .card.shadow
+          .card-header.bg-primary.text-white
+            .d-flex.justify-content-between.align-items-center
+              h4.mb-0
+                i.fas.fa-ticket-alt.me-2
+                | SSO Request Ticket Details
+              .badge.bg-warning.text-dark
+                i.fas.fa-clock.me-1
+                | #{ticket.status.toUpperCase()}
+          
+          .card-body
+            .row.mb-4
+              .col-md-6
+                .info-item.mb-3
+                  strong.text-muted Ticket ID:
+                  .text-monospace.bg-light.p-2.rounded.mt-1 #{ticket.ticketId}
+                
+                .info-item.mb-3
+                  strong.text-muted Organization:
+                  .mt-1 #{ticket.organizationName}
+                
+                .info-item.mb-3
+                  strong.text-muted Request Type:
+                  .mt-1
+                    .badge.bg-info Enterprise Connection Setup
+              
+              .col-md-6
+                .info-item.mb-3
+                  strong.text-muted Requester:
+                  .mt-1 #{ticket.requesterName}
+                
+                .info-item.mb-3
+                  strong.text-muted Email:
+                  .mt-1 #{ticket.requesterEmail}
+                
+                .info-item.mb-3
+                  strong.text-muted Created:
+                  .mt-1 #{new Date(ticket.createdAt).toLocaleString()}
+            
+            .description-section.mb-4
+              h5.text-muted Description
+              .bg-light.p-3.rounded
+                p.mb-0 #{ticket.description}
+            
+            .next-steps-section
+              h5.text-muted Next Steps
+              .list-group
+                each step, index in ticket.nextSteps
+                  .list-group-item.d-flex.align-items-start
+                    .badge.bg-primary.rounded-circle.me-3.mt-1 #{index + 1}
+                    .flex-grow-1 #{step}
+            
+            .actions-section.mt-4.pt-3.border-top
+              .d-flex.justify-content-between.align-items-center
+                a.btn.btn-outline-secondary(href="/partners/dashboard")
+                  i.fas.fa-arrow-left.me-2
+                  | Back to Dashboard
+                
+                .text-muted.small
+                  i.fas.fa-info-circle.me-1
+                  | This ticket will be processed manually by our support team

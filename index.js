@@ -595,6 +595,158 @@ app.post('/partners/register', async (req, res) => {
 	}
 })
 
+// SSO Request endpoint for partners dashboard
+app.post('/partners/dashboard/sso-request', requiresAuth(), async (req, res) => {
+	try {
+		// Check if user has org:admin permission
+		if (!req.userPermissions || !req.userPermissions.includes('org:admin')) {
+			return res.status(403).json({
+				success: false,
+				error: 'Only organization administrators can request SSO connections'
+			});
+		}
+
+		// Get organization info from token
+		const orgId = req.oidc.idTokenClaims.org_id;
+		const orgName = req.oidc.idTokenClaims.org_name;
+		const requesterEmail = req.oidc.user.email;
+		const requesterName = req.oidc.user.name;
+
+		// Get Auth0 Management API token
+		const token = await getManagementApiToken();
+
+		// Step 1: Create self-service profile in Auth0
+		const profileData = {
+			name: `${orgName || 'Unknown Organization'} - SSO Profile`
+		};
+
+		const profileResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/self-service-profiles`,
+			profileData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const profileId = profileResponse.data.id;
+
+		// Step 2: Generate ticket for IDP onboarding using the profile ID
+		// The sso-ticket endpoint requires connection_config with just the name
+		const connectionName = orgName ? 
+			orgName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '-profile' : 
+			'unknown-organization-profile';
+		
+		const ticketData = {
+			connection_config: {
+				name: connectionName
+			}
+		};
+
+		const ticketResponse = await axios.post(
+			`${process.env.MGMT_BASE_URL}/api/v2/self-service-profiles/${profileId}/sso-ticket`,
+			ticketData,
+			{
+				headers: { 
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		const ticketId = ticketResponse.data.ticket ? ticketResponse.data.ticket.split('ticket=')[1] : 'unknown';
+		const ticketUrl = ticketResponse.data.ticket;
+
+		res.json({
+			success: true,
+			message: `SSO profile and ticket created successfully! Profile ID: ${profileId}, Ticket ID: ${ticketId}. Click the link below to access your IDP onboarding ticket.`,
+			profileId: profileId,
+			ticketId: ticketId,
+			ticketUrl: ticketUrl,
+			status: 'created',
+			nextSteps: 'Use the ticket URL to onboard your enterprise identity provider'
+		});
+
+	} catch (error) {
+		console.error('Error creating SSO profile:', error);
+		
+		let errorMessage = 'An error occurred while setting up SSO access. Please try again.';
+		
+		if (error.response) {
+			console.error('Auth0 API Error Response:', {
+				status: error.response.status,
+				statusText: error.response.statusText,
+				data: error.response.data
+			});
+			
+			if (error.response.data) {
+				errorMessage = error.response.data.message || error.response.data.error_description || errorMessage;
+			}
+		}
+
+		res.status(500).json({
+			success: false,
+			error: errorMessage
+		});
+	}
+})
+
+// Route to display ticket details
+app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res) => {
+	try {
+		const { ticketId } = req.params;
+		
+		// Check if user has org:admin permission
+		if (!req.userPermissions || !req.userPermissions.includes('org:admin')) {
+			return res.status(403).render('error', {
+				title: 'Access Denied',
+				error: {
+					status: 403,
+					message: 'Only organization administrators can view ticket details'
+				}
+			});
+		}
+
+		// For now, we'll create a simple ticket details page
+		// In a real implementation, you'd fetch this from a database
+		const ticketData = {
+			ticketId: ticketId,
+			status: 'pending',
+			createdAt: new Date().toISOString(),
+			organizationName: req.oidc.idTokenClaims.org_name || 'Unknown Organization',
+			requesterEmail: req.oidc.user.email,
+			requesterName: req.oidc.user.name,
+			requestType: 'enterprise_connection_setup',
+			description: `SSO setup request for organization: ${req.oidc.idTokenClaims.org_name || 'Unknown Organization'}`,
+			nextSteps: [
+				'Your SSO request has been received and logged',
+				'Our team will review your request within 1-2 business days',
+				'You will receive an email with setup instructions',
+				'Contact support if you have any questions'
+			]
+		};
+
+		res.render('ticket-details', {
+			title: 'SSO Request Ticket Details',
+			ticket: ticketData,
+			user: req.oidc.user,
+			userPermissions: req.userPermissions
+		});
+
+	} catch (error) {
+		console.error('Error displaying ticket details:', error);
+		res.status(500).render('error', {
+			title: 'Error',
+			error: {
+				status: 500,
+				message: 'An error occurred while loading ticket details'
+			}
+		});
+	}
+});
+
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
 	// Use partners-specific login with organization context
