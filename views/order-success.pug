@@ -1,0 +1,127 @@
+extends layout
+
+block content
+  .order-success-page
+    .container
+      .row.justify-content-center
+        .col-lg-8
+          .success-card.text-center
+            .success-icon.mb-4
+              i.fas.fa-check-circle.fa-5x.text-success
+            h1.display-4.mb-3 Order Confirmed!
+            p.lead.mb-4 Thank you for your tire purchase. Your order has been successfully processed.
+            
+            .order-details
+              .detail-item
+                span.label Order Number:
+                span.value #TIR-2024-001234
+              .detail-item
+                span.label Estimated Delivery:
+                span.value 3-5 business days
+              .detail-item
+                span.label Installation Appointment:
+                span.value We'll contact you to schedule
+            
+            .next-steps.mt-5
+              h4.mb-3 What's Next?
+              .row
+                .col-md-4.mb-3
+                  .step-card
+                    i.fas.fa-envelope.fa-2x.text-primary.mb-3
+                    h6 Email Confirmation
+                    p.text-muted You'll receive an order confirmation email shortly
+                .col-md-4.mb-3
+                  .step-card
+                    i.fas.fa-phone.fa-2x.text-primary.mb-3
+                    h6 Installation Call
+                    p.text-muted We'll call you within 24 hours to schedule installation
+                .col-md-4.mb-3
+                  .step-card
+                    i.fas.fa-truck.fa-2x.text-primary.mb-3
+                    h6 Delivery & Installation
+                    p.text-muted Your tires will be delivered and professionally installed
+            
+            .action-buttons.mt-5
+              a.btn.btn-primary.btn-lg.me-3(href='/tires') Continue Shopping
+              a.btn.btn-outline-primary.btn-lg(href='/') Return Home
+
+  style.
+    .order-success-page {
+      padding: 80px 0;
+      background: #f8f9fa;
+      min-height: 100vh;
+    }
+    
+    .success-card {
+      background: white;
+      border-radius: 16px;
+      padding: 60px 40px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .success-icon {
+      animation: bounceIn 0.8s ease-out;
+    }
+    
+    @keyframes bounceIn {
+      0% {
+        transform: scale(0.3);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      70% {
+        transform: scale(0.9);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .order-details {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 30px 0;
+    }
+    
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .detail-item:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-item .label {
+      font-weight: 600;
+      color: #004ea8;
+    }
+    
+    .detail-item .value {
+      color: #6c757d;
+    }
+    
+    .step-card {
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: 100%;
+    }
+    
+    .step-card h6 {
+      color: #004ea8;
+      margin-bottom: 10px;
+    }
+    
+    .action-buttons {
+      border-top: 1px solid #e9ecef;
+      padding-top: 30px;
+    }

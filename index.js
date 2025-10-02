@@ -148,7 +148,7 @@ app.use(
 	})
 )
 
-// Custom callback handler to check for MFA return (must be before auth middleware)
+// Custom callback handler to check for MFA return and returnTo parameter (must be before auth middleware)
 app.get('/callback', (req, res, next) => {
   // Check if this is a return from our MFA flow
   if (req.session && req.session.mfaReturnTo) {
@@ -158,12 +158,58 @@ app.get('/callback', (req, res, next) => {
     return res.redirect(returnTo);
   }
   
+  // Check if there's a returnTo parameter in the query string
+  if (req.query.returnTo) {
+    console.log('Callback with returnTo parameter, will redirect to:', req.query.returnTo);
+    // Store the returnTo in session so it's available after auth middleware processes
+    req.session.returnTo = req.query.returnTo;
+  }
+  
   // Otherwise, use the default callback handling
   next();
 });
 
 // Customer Auth0 middleware
 app.use(auth(authConfig))
+
+// Post-auth callback handler to redirect to returnTo URL
+app.use((req, res, next) => {
+  // Check if user just completed authentication and has a returnTo in session
+  if (req.oidc?.isAuthenticated() && req.session?.returnTo) {
+    const returnTo = req.session.returnTo;
+    delete req.session.returnTo;
+    console.log('Authentication completed, redirecting to:', returnTo);
+    return res.redirect(returnTo);
+  }
+  next();
+});
+
+// Auth0 error handling middleware
+app.use((err, req, res, next) => {
+  if (err.name === 'BadRequestError' && err.message.includes('Timeout')) {
+    console.error('Auth0 timeout error:', err.message);
+    console.error('Request URL:', req.url);
+    console.error('Request method:', req.method);
+    
+    // If it's a callback timeout, redirect to login
+    if (req.url.includes('/callback')) {
+      console.log('Callback timeout, redirecting to login');
+      return res.redirect('/login');
+    }
+    
+    // For other timeouts, show error page
+    return res.status(500).render('error', {
+      title: 'Authentication Timeout',
+      error: {
+        message: 'Authentication service is temporarily unavailable. Please try again.',
+        status: 500
+      }
+    });
+  }
+  
+  // Pass other errors to default error handler
+  next(err);
+});
 
 // Partners Auth0 middleware (for organization-specific routes)
 const partnersAuth = auth(partnersAuthConfig)
@@ -745,6 +791,55 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 			}
 		});
 	}
+});
+
+// Tires shopping cart page
+app.get('/tires', (req, res) => {
+	res.render('tires', {
+		title: 'Tires - Shop Tires Online',
+		user: req.oidc?.user,
+		userTier: req.userTier || 'free',
+		userPermissions: req.userPermissions || []
+	});
+});
+
+// Checkout page
+app.get('/checkout', (req, res) => {
+	console.log('Checkout route - User object:', req.oidc?.user);
+	console.log('Checkout route - User name:', req.oidc?.user?.name);
+	console.log('Checkout route - Is authenticated:', req.oidc?.isAuthenticated());
+	console.log('Checkout route - Query params:', req.query);
+	
+	// If user has auth code but isn't authenticated, redirect to callback to process it
+	if (!req.oidc?.isAuthenticated() && req.query.code) {
+		console.log('User has auth code but not authenticated - redirecting to callback');
+		// Redirect to the Auth0 callback URL to process the authorization code
+		// Preserve the returnTo parameter to ensure user comes back to checkout
+		const queryParams = new URLSearchParams(req.query);
+		if (!queryParams.has('returnTo')) {
+			queryParams.set('returnTo', '/checkout');
+		}
+		const callbackUrl = `/callback?${queryParams.toString()}`;
+		return res.redirect(callbackUrl);
+	}
+	
+	res.render('checkout', {
+		title: 'Checkout - Complete Your Tire Order',
+		user: req.oidc?.user,
+		userTier: req.userTier || 'free',
+		userPermissions: req.userPermissions || []
+	});
+});
+
+
+// Order success page
+app.get('/order-success', (req, res) => {
+	res.render('order-success', {
+		title: 'Order Confirmed - Thank You!',
+		user: req.oidc?.user,
+		userTier: req.userTier || 'free',
+		userPermissions: req.userPermissions || []
+	});
 });
 
 // Partners-specific login route that redirects back to /partners
