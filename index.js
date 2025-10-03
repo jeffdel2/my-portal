@@ -165,7 +165,7 @@ app.get('/callback', (req, res, next) => {
     req.session.returnTo = req.query.returnTo;
   }
   
-  // Otherwise, use the default callback handling
+  // Always let Auth0 middleware handle the callback to maintain state validation
   next();
 });
 
@@ -810,16 +810,17 @@ app.get('/checkout', (req, res) => {
 	console.log('Checkout route - Is authenticated:', req.oidc?.isAuthenticated());
 	console.log('Checkout route - Query params:', req.query);
 	
-	// If user has auth code but isn't authenticated, redirect to callback to process it
+	// If user has auth code but isn't authenticated, redirect to proper callback
 	if (!req.oidc?.isAuthenticated() && req.query.code) {
 		console.log('User has auth code but not authenticated - redirecting to callback');
-		// Redirect to the Auth0 callback URL to process the authorization code
-		// Preserve the returnTo parameter to ensure user comes back to checkout
-		const queryParams = new URLSearchParams(req.query);
-		if (!queryParams.has('returnTo')) {
-			queryParams.set('returnTo', '/checkout');
+		// Store returnTo in session before redirecting to callback
+		if (req.query.returnTo) {
+			req.session.returnTo = req.query.returnTo;
+		} else {
+			req.session.returnTo = '/checkout';
 		}
-		const callbackUrl = `/callback?${queryParams.toString()}`;
+		// Redirect to the proper Auth0 callback endpoint
+		const callbackUrl = `/callback?${new URLSearchParams(req.query).toString()}`;
 		return res.redirect(callbackUrl);
 	}
 	
@@ -831,6 +832,90 @@ app.get('/checkout', (req, res) => {
 	});
 });
 
+
+// Get user metadata
+app.get('/user-metadata', async (req, res) => {
+	try {
+		if (!req.oidc?.user) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+
+		// Get management API token
+		const token = await getManagementApiToken();
+
+		// Get user metadata
+		const response = await axios.get(
+			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		res.json(response.data.user_metadata || {});
+
+	} catch (error) {
+		console.error('Error getting user metadata:', error.response?.data || error.message);
+		res.status(500).json({ error: 'Failed to get user metadata' });
+	}
+});
+
+// Save shipping information to user metadata
+app.post('/save-shipping-info', async (req, res) => {
+	try {
+		if (!req.oidc?.user) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+
+		const { firstName, lastName, address, city, state, zipCode, phone, email } = req.body;
+
+		// Validate required fields
+		if (!firstName || !lastName || !address || !city || !state || !zipCode || !phone || !email) {
+			return res.status(400).json({ error: 'All shipping fields are required' });
+		}
+
+		// Get management API token
+		const token = await getManagementApiToken();
+
+		// Prepare shipping information for user_metadata
+		const shippingInfo = {
+			address,
+			city,
+			state,
+			zipCode,
+			email,
+			lastUpdated: new Date().toISOString()
+		};
+
+		// Update user metadata with standalone fields and shipping info
+		const response = await axios.patch(
+			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
+			{
+				user_metadata: {
+					first_name: firstName,
+					last_name: lastName,
+					phone: phone,
+					shippingInfo: shippingInfo
+				}
+			},
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		console.log('Shipping info saved for user:', req.oidc.user.sub);
+		res.json({ success: true, message: 'Shipping information saved successfully' });
+
+	} catch (error) {
+		console.error('Error saving shipping info:', error.response?.data || error.message);
+		res.status(500).json({ error: 'Failed to save shipping information' });
+	}
+});
 
 // Order success page
 app.get('/order-success', (req, res) => {

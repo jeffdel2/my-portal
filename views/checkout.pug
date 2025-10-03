@@ -380,44 +380,6 @@ block content
       total.textContent = `$${orderTotal.toFixed(2)}`;
     }
     
-    function processPayment() {
-      // Validate form
-      const requiredFields = ['firstName', 'lastName', 'address', 'city', 'state', 'zipCode', 'phone', 'email'];
-      let isValid = true;
-      
-      requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (!field.value.trim()) {
-          field.classList.add('is-invalid');
-          isValid = false;
-        } else {
-          field.classList.remove('is-invalid');
-        }
-      });
-      
-      if (!isValid) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-      
-      // Simulate payment processing
-      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-      
-      // Show loading state
-      const button = document.querySelector('button[onclick="processPayment()"]');
-      const originalText = button.textContent;
-      button.textContent = 'Processing...';
-      button.disabled = true;
-      
-      setTimeout(() => {
-        // Clear cart
-        sessionStorage.removeItem('tireCart');
-        
-        // Redirect to success page
-        window.location.href = '/order-success';
-      }, 2000);
-    }
-    
     // Service checkbox handlers
     document.getElementById('installation').addEventListener('change', function() {
       services.installation.enabled = this.checked;
@@ -453,11 +415,41 @@ block content
     // Show authentication status message
     if (isAuthenticated) {
       console.log('User is authenticated, pre-filling form fields');
+      // Try to load saved shipping information
+      loadSavedShippingInfo();
     } else {
       console.log('User is not authenticated, guest checkout mode');
     }
     
-    function processPayment() {
+    async function loadSavedShippingInfo() {
+      try {
+        // Get user metadata from Auth0 to check for saved shipping info
+        const response = await fetch('/user-metadata');
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('Loading saved user information');
+          
+          // Pre-fill form fields with saved user data
+          document.getElementById('firstName').value = userData.first_name || '';
+          document.getElementById('lastName').value = userData.last_name || '';
+          document.getElementById('phone').value = userData.phone || '';
+          
+          // Pre-fill shipping info if available
+          if (userData.shippingInfo) {
+            const shipping = userData.shippingInfo;
+            document.getElementById('address').value = shipping.address || '';
+            document.getElementById('city').value = shipping.city || '';
+            document.getElementById('state').value = shipping.state || '';
+            document.getElementById('zipCode').value = shipping.zipCode || '';
+            document.getElementById('email').value = shipping.email || '';
+          }
+        }
+      } catch (error) {
+        console.log('Could not load saved shipping information:', error);
+      }
+    }
+    
+    async function processPayment() {
       // Validate form
       const requiredFields = ['firstName', 'lastName', 'address', 'city', 'state', 'zipCode', 'phone', 'email'];
       let isValid = true;
@@ -477,20 +469,56 @@ block content
         return;
       }
       
-      // Simulate payment processing
-      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-      
       // Show loading state
       const button = document.querySelector('button[onclick="processPayment()"]');
       const originalText = button.textContent;
       button.textContent = 'Processing...';
       button.disabled = true;
       
-      setTimeout(() => {
-        // Clear cart
-        sessionStorage.removeItem('tireCart');
+      try {
+        // If user is authenticated, save shipping info to their profile
+        if (isAuthenticated) {
+          const shippingData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            address: document.getElementById('address').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            zipCode: document.getElementById('zipCode').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value
+          };
+          
+          const saveResponse = await fetch('/save-shipping-info', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(shippingData)
+          });
+          
+          if (saveResponse.ok) {
+            console.log('Shipping information saved successfully');
+          } else {
+            console.warn('Failed to save shipping information, but continuing with order');
+          }
+        }
         
-        // Redirect to success page
-        window.location.href = '/order-success';
-      }, 2000);
+        // Simulate payment processing
+        const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+        
+        setTimeout(() => {
+          // Clear cart
+          sessionStorage.removeItem('tireCart');
+          
+          // Redirect to success page
+          window.location.href = '/order-success';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error processing payment:', error);
+        button.textContent = originalText;
+        button.disabled = false;
+        alert('There was an error processing your order. Please try again.');
+      }
     }

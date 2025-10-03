@@ -686,8 +686,8 @@ block content
         sessionStorage.setItem('tireCartBackup', cartData);
       }
       
-      // Redirect to Auth0 signup with return URL to checkout
-      const returnUrl = encodeURIComponent(window.location.origin + '/checkout');
+      // Redirect to Auth0 signup with return URL to callback
+      const returnUrl = encodeURIComponent(window.location.origin + '/callback?returnTo=' + encodeURIComponent('/checkout'));
       const signupUrl = `#{process.env.ISSUER_BASE_URL}/authorize?screen_hint=signup&redirect_uri=${returnUrl}&client_id=#{process.env.CLIENT_ID}&response_type=code&scope=openid%20profile%20email`;
       window.location.href = signupUrl;
     }
@@ -699,8 +699,8 @@ block content
         sessionStorage.setItem('tireCartBackup', cartData);
       }
       
-      // Redirect to Auth0 login with return URL to checkout
-      const returnUrl = encodeURIComponent(window.location.origin + '/checkout');
+      // Redirect to Auth0 login with return URL to callback
+      const returnUrl = encodeURIComponent(window.location.origin + '/callback?returnTo=' + encodeURIComponent('/checkout'));
       const loginUrl = `${window.location.origin}/login?returnTo=${returnUrl}`;
       window.location.href = loginUrl;
     }
