@@ -9,13 +9,13 @@ block content
           .col-lg-6
             .partners-hero-content
               .partners-badge
-                span.badge-text Enterprise Partnership
+                span.badge-text Authorized Dealer Program
               h1.partners-main-title
-                | Accelerate Your Business with 
-                span.highlight AT&T Partnership
+                | Grow Your Business with 
+                span.highlight Goodyear Partnership
               p.partners-hero-description
-                | Join our exclusive partner ecosystem and unlock new revenue streams, 
-                | access cutting-edge technology, and grow your business with industry-leading solutions.
+                | Join our exclusive dealer network and unlock new revenue opportunities, 
+                | access premium tire products, and grow your business with the world's leading tire brand.
               .partners-cta-buttons
                 if user && userTier === 'premium'
                   a.btn.btn-partners-primary.btn-lg(href='/partners/admin')
@@ -40,14 +40,14 @@ block content
                     | Become a Partner
               .partners-trust-indicators
                 .trust-item
-                  span.trust-number 500+
-                  span.trust-label Active Partners
+                  span.trust-number 2,500+
+                  span.trust-label Authorized Dealers
                 .trust-item
-                  span.trust-number $2B+
-                  span.trust-label Partner Revenue
+                  span.trust-number 120+
+                  span.trust-label Years of Excellence
                 .trust-item
-                  span.trust-number 99.9%
-                  span.trust-label Uptime SLA
+                  span.trust-number #1
+                  span.trust-label Tire Brand Globally
           .col-lg-6
             .partners-hero-visual
               .partners-visual-card
@@ -58,11 +58,11 @@ block content
                 .visual-content
                   .metric-row
                     .metric
-                      .metric-value $125K
-                      .metric-label Monthly Revenue
+                      .metric-value $185K
+                      .metric-label Monthly Tire Sales
                     .metric
-                      .metric-value 45
-                      .metric-label Active Deals
+                      .metric-value 1,250
+                      .metric-label Units Sold
                   .chart-placeholder
                     .chart-bar(style="height: 60%")
                     .chart-bar(style="height: 80%")
@@ -99,24 +99,24 @@ block content
     .partners-tiers-section
       .container
         .section-header
-          h2.section-title Partnership Tiers
-          p.section-subtitle Choose the partnership level that fits your business needs
+          h2.section-title Dealer Partnership Tiers
+          p.section-subtitle Choose the dealer level that fits your business needs
         .row
           .col-lg-4
             .tier-card.tier-bronze
               .tier-header
                 .tier-icon
-                  i.fas.fa-medal
-                h3.tier-name Bronze Partner
+                  i.fas.fa-store
+                h3.tier-name Authorized Dealer
                 .tier-price
                   span.price Free
-                  span.period /month
+                  span.period to join
               .tier-features
                 ul
-                  li Basic partner resources
-                  li Community support
+                  li Access to full tire catalog
+                  li Dealer portal access
                   li Standard training materials
-                  li Partner directory listing
+                  li Marketing support
               .tier-cta
                 a.btn.btn-tier(href='/partners/register?tier=bronze') Get Started
           .col-lg-4
@@ -125,17 +125,17 @@ block content
               .tier-header
                 .tier-icon
                   i.fas.fa-award
-                h3.tier-name Silver Partner
+                h3.tier-name Premium Dealer
                 .tier-price
-                  span.price $299
+                  span.price $499
                   span.period /month
               .tier-features
                 ul
-                  li All Bronze features
-                  li Priority support
-                  li Advanced training
-                  li Co-marketing opportunities
-                  li Revenue sharing (5%)
+                  li All Authorized features
+                  li Priority inventory access
+                  li Advanced training programs
+                  li Co-branded marketing
+                  li Volume discounts (10%)
               .tier-cta
                 a.btn.btn-tier.btn-tier-primary(href='/partners/register?tier=silver') Upgrade Now
           .col-lg-4
@@ -143,17 +143,17 @@ block content
               .tier-header
                 .tier-icon
                   i.fas.fa-crown
-                h3.tier-name Gold Partner
+                h3.tier-name Elite Dealer
                 .tier-price
                   span.price Custom
                   span.period pricing
               .tier-features
                 ul
-                  li All Silver features
+                  li All Premium features
                   li Dedicated account manager
-                  li Custom integrations
-                  li Higher revenue sharing (10%)
-                  li Executive briefings
+                  li Exclusive product launches
+                  li Higher volume discounts (15%)
+                  li Regional territory rights
               .tier-cta
                 a.btn.btn-tier(href='/partners/register?tier=gold') Contact Sales
 
@@ -161,101 +161,101 @@ block content
     .partners-success-section
       .container
         .section-header
-          h2.section-title Partner Success Stories
-          p.section-subtitle See how our partners are growing their businesses
+          h2.section-title Dealer Success Stories
+          p.section-subtitle See how our dealers are growing their businesses
         .row
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-1.png', alt='TechCorp', onerror="this.style.display='none'")
-                .fallback-logo TC
+                img(src='/static/images/partner-logo-1.png', alt='City Tire Center', onerror="this.style.display='none'")
+                .fallback-logo CT
               .success-content
-                h4 TechCorp Solutions
-                p.success-quote "Partnering with AT&T increased our revenue by 300% in the first year."
+                h4 City Tire Center
+                p.success-quote "Becoming a Goodyear dealer increased our revenue by 250% in the first year."
                 .success-metrics
                   .metric
-                    span.metric-value 300%
+                    span.metric-value 250%
                     span.metric-label Revenue Growth
                   .metric
-                    span.metric-value $2.5M
+                    span.metric-value $3.2M
                     span.metric-label Annual Revenue
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-2.png', alt='DataFlow', onerror="this.style.display='none'")
-                .fallback-logo DF
+                img(src='/static/images/partner-logo-2.png', alt='Auto Service Pro', onerror="this.style.display='none'")
+                .fallback-logo AS
               .success-content
-                h4 DataFlow Analytics
-                p.success-quote "The support and resources provided helped us scale to 50+ enterprise clients."
+                h4 Auto Service Pro
+                p.success-quote "The dealer support and training helped us expand to 8 locations in 3 years."
                 .success-metrics
                   .metric
-                    span.metric-value 50+
-                    span.metric-label Enterprise Clients
+                    span.metric-value 8
+                    span.metric-label Locations
                   .metric
-                    span.metric-value 150%
-                    span.metric-label Client Growth
+                    span.metric-value 180%
+                    span.metric-label Customer Growth
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-3.png', alt='CloudTech', onerror="this.style.display='none'")
-                .fallback-logo CT
+                img(src='/static/images/partner-logo-3.png', alt='Highway Tire Shop', onerror="this.style.display='none'")
+                .fallback-logo HT
               .success-content
-                h4 CloudTech Innovations
-                p.success-quote "AT&T's technology integration capabilities transformed our service offerings."
+                h4 Highway Tire Shop
+                p.success-quote "Goodyear's premium tire selection and marketing support transformed our business."
                 .success-metrics
                   .metric
-                    span.metric-value 5x
-                    span.metric-label Service Expansion
+                    span.metric-value 4x
+                    span.metric-label Sales Increase
                   .metric
-                    span.metric-value 99.9%
-                    span.metric-label Uptime
+                    span.metric-value 98%
+                    span.metric-label Customer Satisfaction
 
     // Resources Section
     .partners-resources-section
       .container
         .section-header
-          h2.section-title Partner Resources
-          p.section-subtitle Everything you need to succeed as an AT&T partner
+          h2.section-title Dealer Resources
+          p.section-subtitle Everything you need to succeed as a Goodyear dealer
         .row
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
                 i.fas.fa-book
-              h4.resource-title Documentation
-              p.resource-description Comprehensive guides and API documentation
-              a.resource-link(href='#') View Docs →
+              h4.resource-title Product Catalog
+              p.resource-description Complete tire specifications and inventory guides
+              a.resource-link(href='#') View Catalog →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
                 i.fas.fa-graduation-cap
               h4.resource-title Training
-              p.resource-description Certification programs and skill development
+              p.resource-description Tire installation and service certification programs
               a.resource-link(href='#') Start Learning →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
-                i.fas.fa-tools
-              h4.resource-title Tools
-              p.resource-description Development tools and integration kits
-              a.resource-link(href='#') Access Tools →
+                i.fas.fa-bullhorn
+              h4.resource-title Marketing
+              p.resource-description Co-branded materials and promotional campaigns
+              a.resource-link(href='#') Get Materials →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
                 i.fas.fa-users
-              h4.resource-title Community
-              p.resource-description Connect with other partners and experts
-              a.resource-link(href='#') Join Community →
+              h4.resource-title Dealer Network
+              p.resource-description Connect with other dealers and share best practices
+              a.resource-link(href='#') Join Network →
 
     // CTA Section
     .partners-cta-section
       .container
         .cta-content
-          h2.cta-title Ready to Partner with AT&T?
-          p.cta-description Join thousands of successful partners and start growing your business today.
+          h2.cta-title Ready to Become a Goodyear Dealer?
+          p.cta-description Join thousands of successful dealers and start growing your tire business today.
           .cta-buttons
             a.btn.btn-cta-primary.btn-lg(href='/partners/register')
               i.fas.fa-rocket.me-2
-              | Start Your Partnership
+              | Become a Dealer
             a.btn.btn-cta-outline.btn-lg(href='/partners/contact')
               i.fas.fa-phone.me-2
               | Contact Sales
@@ -265,10 +265,10 @@ block content
       .footer-container
         .footer-content
           .footer-section
-            h4.footer-title Partner Resources
+            h4.footer-title Dealer Resources
             ul.footer-links
-              li: a(href='#') Partner Portal
-              li: a(href='#') Documentation
+              li: a(href='#') Dealer Portal
+              li: a(href='#') Product Catalog
               li: a(href='#') Training Materials
               li: a(href='#') Support Center
               li: a(href='#') Partner Directory
