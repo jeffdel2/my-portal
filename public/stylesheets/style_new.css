@@ -1,14 +1,14 @@
 :root {
     --color-x: rgba(193, 220, 220, 1);
-    --color-1: #004ea8;
+    --color-1: #0066CC;
     --color-2: #ffffff;
     --color-3: rgba(30, 30, 30, 0.75);
     --color-4: rgba(30, 30, 30, 0.5);
     --color-5: white;
-    --brand-primary: #004ea8;
-    --brand-secondary: #ffc107;
-    --brand-primary-light: #3366bb;
-    --brand-secondary-light: #ffd54f;
+    --brand-primary: #0066CC;
+    --brand-secondary: #6B46C1;
+    --brand-primary-light: #3388DD;
+    --brand-secondary-light: #8B5CF6;
     --main-font: "HelveticaNeue", sans-serif;
   }
 
@@ -139,7 +139,7 @@ ul.header li {
     font-size: 1rem;
     padding: 0 1rem;
     color: #000000;
-    background-color: #004ea8;
+    background-color: #0066CC;
     display: inline-flex;
 }
 
@@ -1925,8 +1925,8 @@ hr {
 
 /* Upgrade Button Styles */
 .upgrade-btn {
-    background: linear-gradient(135deg, #ffc107, #ffb300) !important;
-    color: #000000 !important;
+    background: linear-gradient(135deg, #6B46C1, #5B21B6) !important;
+    color: #ffffff !important;
     border: none !important;
     padding: 10px 20px !important;
     border-radius: 6px !important;
@@ -1939,8 +1939,8 @@ hr {
 }
 
 .upgrade-btn:hover {
-    background: linear-gradient(135deg, #ffb300, #ffa000) !important;
-    color: #000000 !important;
+    background: linear-gradient(135deg, #5B21B6, #4C1D95) !important;
+    color: #ffffff !important;
 }
 
 /* Upgrade Page Styles */
@@ -2497,7 +2497,7 @@ hr {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 20px;
-    border-bottom: 2px solid #ffc107;
+    border-bottom: 2px solid #6B46C1;
     padding-bottom: 8px;
 }
 
@@ -2519,7 +2519,7 @@ hr {
 }
 
 .footer-links a:hover {
-    color: #004ea8;
+    color: #0066CC;
     text-decoration: underline;
 }
 
@@ -2555,7 +2555,7 @@ hr {
 }
 
 .footer-bottom-links a:hover {
-    color: #004ea8;
+    color: #0066CC;
     text-decoration: underline;
 }
 
@@ -2718,20 +2718,20 @@ hr {
 }
 
 .sso-request-section .btn-primary {
-    background: linear-gradient(135deg, #004ea8, #003d87);
+    background: linear-gradient(135deg, #0066CC, #0052A3);
     border: none;
     padding: 15px 40px;
     font-weight: 600;
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 78, 168, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
 }
 
 .sso-request-section .btn-primary:hover {
-    background: linear-gradient(135deg, #003d87, #002f6b);
+    background: linear-gradient(135deg, #0052A3, #003D7A);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 78, 168, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 102, 204, 0.3);
 }
 
 .sso-request-section .btn-primary:disabled {
@@ -3203,7 +3203,7 @@ hr {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #004ea8, #003d87);
+    background: linear-gradient(135deg, #0066CC, #0052A3);
     border: none;
     color: white;
     padding: 15px 30px;
@@ -3215,7 +3215,7 @@ hr {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 78, 168, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
     color: white;
 }
 

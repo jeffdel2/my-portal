@@ -9,13 +9,13 @@ block content
           .col-lg-6
             .partners-hero-content
               .partners-badge
-                span.badge-text Authorized Dealer Program
+                span.badge-text Nielsen Panelist Program
               h1.partners-main-title
-                | Grow Your Business with 
-                span.highlight Goodyear Partnership
+                | Join the Nielsen 
+                span.highlight Consumer Panel
               p.partners-hero-description
-                | Join our exclusive dealer network and unlock new revenue opportunities, 
-                | access premium tire products, and grow your business with the world's leading tire brand.
+                | Become a Nielsen panelist and help shape the future of consumer insights. 
+                | Share your shopping experiences and influence the products and services that matter to you.
               .partners-cta-buttons
                 if user && userTier === 'premium'
                   a.btn.btn-partners-primary.btn-lg(href='/partners/admin')
@@ -34,35 +34,35 @@ block content
                 else
                   a.btn.btn-partners-primary.btn-lg(href='/partners/login')
                     i.fas.fa-sign-in-alt.me-2
-                    | Partner Login
+                    | Panelist Login
                   a.btn.btn-partners-outline.btn-lg(href='/partners/register')
-                    i.fas.fa-handshake.me-2
-                    | Become a Partner
+                    i.fas.fa-user-plus.me-2
+                    | Join the Panel
               .partners-trust-indicators
                 .trust-item
-                  span.trust-number 2,500+
-                  span.trust-label Authorized Dealers
+                  span.trust-number 100K+
+                  span.trust-label Active Panelists
                 .trust-item
-                  span.trust-number 120+
-                  span.trust-label Years of Excellence
+                  span.trust-number 100+
+                  span.trust-label Countries
                 .trust-item
                   span.trust-number #1
-                  span.trust-label Tire Brand Globally
+                  span.trust-label Consumer Insights
           .col-lg-6
             .partners-hero-visual
               .partners-visual-card
                 .visual-header
                   .visual-icon
                     i.fas.fa-chart-line
-                  h4 Partner Dashboard
+                  h4 Panelist Dashboard
                 .visual-content
                   .metric-row
                     .metric
-                      .metric-value $185K
-                      .metric-label Monthly Tire Sales
+                      .metric-value 2.5M
+                      .metric-label Shopping Trips Tracked
                     .metric
-                      .metric-value 1,250
-                      .metric-label Units Sold
+                      .metric-value 15K
+                      .metric-label Products Analyzed
                   .chart-placeholder
                     .chart-bar(style="height: 60%")
                     .chart-bar(style="height: 80%")
@@ -78,16 +78,16 @@ block content
             .admin-content
               .admin-badge
                 i.fas.fa-crown.me-2
-                span.badge-text Partner Administrator
+                span.badge-text Panel Administrator
               h2.admin-title Welcome, #{user.name || 'Admin'}
-              p.admin-description Access advanced partner management tools and administrative functions.
+              p.admin-description Access advanced panelist management tools and administrative functions.
               .admin-actions
                 a.btn.btn-admin-primary(href='/partners/admin/dashboard')
                   i.fas.fa-tachometer-alt.me-2
                   | Admin Dashboard
                 a.btn.btn-admin-outline(href='/partners/admin/partners')
                   i.fas.fa-users.me-2
-                  | Manage Partners
+                  | Manage Panelists
                 a.btn.btn-admin-outline(href='/partners/admin/analytics')
                   i.fas.fa-chart-bar.me-2
                   | Analytics
@@ -99,24 +99,24 @@ block content
     .partners-tiers-section
       .container
         .section-header
-          h2.section-title Dealer Partnership Tiers
-          p.section-subtitle Choose the dealer level that fits your business needs
+          h2.section-title Panelist Engagement Levels
+          p.section-subtitle Choose the participation level that fits your lifestyle
         .row
           .col-lg-4
             .tier-card.tier-bronze
               .tier-header
                 .tier-icon
-                  i.fas.fa-store
-                h3.tier-name Authorized Dealer
+                  i.fas.fa-user
+                h3.tier-name Basic Panelist
                 .tier-price
                   span.price Free
                   span.period to join
               .tier-features
                 ul
-                  li Access to full tire catalog
-                  li Dealer portal access
-                  li Standard training materials
-                  li Marketing support
+                  li Shopping receipt scanning
+                  li Basic surveys (5-10 min)
+                  li Monthly rewards ($5-10)
+                  li Mobile app access
               .tier-cta
                 a.btn.btn-tier(href='/partners/register?tier=bronze') Get Started
           .col-lg-4
@@ -125,17 +125,17 @@ block content
               .tier-header
                 .tier-icon
                   i.fas.fa-award
-                h3.tier-name Premium Dealer
+                h3.tier-name Active Panelist
                 .tier-price
-                  span.price $499
-                  span.period /month
+                  span.price $15-25
+                  span.period /month rewards
               .tier-features
                 ul
-                  li All Authorized features
-                  li Priority inventory access
-                  li Advanced training programs
-                  li Co-branded marketing
-                  li Volume discounts (10%)
+                  li All Basic features
+                  li Extended surveys (15-30 min)
+                  li Product testing opportunities
+                  li Focus group invitations
+                  li Higher reward rates
               .tier-cta
                 a.btn.btn-tier.btn-tier-primary(href='/partners/register?tier=silver') Upgrade Now
           .col-lg-4
@@ -143,175 +143,175 @@ block content
               .tier-header
                 .tier-icon
                   i.fas.fa-crown
-                h3.tier-name Elite Dealer
+                h3.tier-name Premium Panelist
                 .tier-price
-                  span.price Custom
-                  span.period pricing
+                  span.price $30-50
+                  span.period /month rewards
               .tier-features
                 ul
-                  li All Premium features
-                  li Dedicated account manager
-                  li Exclusive product launches
-                  li Higher volume discounts (15%)
-                  li Regional territory rights
+                  li All Active features
+                  li In-home product testing
+                  li Exclusive research studies
+                  li Higher reward rates (up to $50)
+                  li Priority support
               .tier-cta
-                a.btn.btn-tier(href='/partners/register?tier=gold') Contact Sales
+                a.btn.btn-tier(href='/partners/register?tier=gold') Apply Now
 
     // Success Stories Section
     .partners-success-section
       .container
         .section-header
-          h2.section-title Dealer Success Stories
-          p.section-subtitle See how our dealers are growing their businesses
+          h2.section-title Panelist Success Stories
+          p.section-subtitle See how our panelists are making a difference
         .row
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-1.png', alt='City Tire Center', onerror="this.style.display='none'")
-                .fallback-logo CT
+                img(src='/static/images/partner-logo-1.png', alt='Sarah M.', onerror="this.style.display='none'")
+                .fallback-logo SM
               .success-content
-                h4 City Tire Center
-                p.success-quote "Becoming a Goodyear dealer increased our revenue by 250% in the first year."
+                h4 Sarah M.
+                p.success-quote "Being a Nielsen panelist for 3 years has helped me earn over $1,200 in rewards while sharing my shopping insights."
                 .success-metrics
                   .metric
-                    span.metric-value 250%
-                    span.metric-label Revenue Growth
+                    span.metric-value $1,200
+                    span.metric-label Total Rewards
                   .metric
-                    span.metric-value $3.2M
-                    span.metric-label Annual Revenue
+                    span.metric-value 3
+                    span.metric-label Years Active
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-2.png', alt='Auto Service Pro', onerror="this.style.display='none'")
-                .fallback-logo AS
+                img(src='/static/images/partner-logo-2.png', alt='Mike R.', onerror="this.style.display='none'")
+                .fallback-logo MR
               .success-content
-                h4 Auto Service Pro
-                p.success-quote "The dealer support and training helped us expand to 8 locations in 3 years."
+                h4 Mike R.
+                p.success-quote "I love testing new products and providing feedback. The focus groups are really interesting and the rewards are great!"
                 .success-metrics
                   .metric
-                    span.metric-value 8
-                    span.metric-label Locations
+                    span.metric-value 15
+                    span.metric-label Products Tested
                   .metric
-                    span.metric-value 180%
-                    span.metric-label Customer Growth
+                    span.metric-value $800
+                    span.metric-label This Year
           .col-lg-4
             .success-card
               .success-logo
-                img(src='/static/images/partner-logo-3.png', alt='Highway Tire Shop', onerror="this.style.display='none'")
-                .fallback-logo HT
+                img(src='/static/images/partner-logo-3.png', alt='Jennifer L.', onerror="this.style.display='none'")
+                .fallback-logo JL
               .success-content
-                h4 Highway Tire Shop
-                p.success-quote "Goodyear's premium tire selection and marketing support transformed our business."
+                h4 Jennifer L.
+                p.success-quote "Scanning receipts is so easy and I love knowing my shopping data helps companies make better products."
                 .success-metrics
                   .metric
-                    span.metric-value 4x
-                    span.metric-label Sales Increase
+                    span.metric-value 2,500
+                    span.metric-label Receipts Scanned
                   .metric
-                    span.metric-value 98%
-                    span.metric-label Customer Satisfaction
+                    span.metric-value $600
+                    span.metric-label Total Earned
 
     // Resources Section
     .partners-resources-section
       .container
         .section-header
-          h2.section-title Dealer Resources
-          p.section-subtitle Everything you need to succeed as a Goodyear dealer
+          h2.section-title Panelist Resources
+          p.section-subtitle Everything you need to succeed as a Nielsen panelist
         .row
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
-                i.fas.fa-book
-              h4.resource-title Product Catalog
-              p.resource-description Complete tire specifications and inventory guides
-              a.resource-link(href='#') View Catalog →
+                i.fas.fa-mobile-alt
+              h4.resource-title Mobile App
+              p.resource-description Download our app for easy receipt scanning and surveys
+              a.resource-link(href='#') Download App →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
-                i.fas.fa-graduation-cap
-              h4.resource-title Training
-              p.resource-description Tire installation and service certification programs
-              a.resource-link(href='#') Start Learning →
+                i.fas.fa-question-circle
+              h4.resource-title Help Center
+              p.resource-description Get answers to common questions and support
+              a.resource-link(href='#') Get Help →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
-                i.fas.fa-bullhorn
-              h4.resource-title Marketing
-              p.resource-description Co-branded materials and promotional campaigns
-              a.resource-link(href='#') Get Materials →
+                i.fas.fa-gift
+              h4.resource-title Rewards Program
+              p.resource-description Learn about earning opportunities and redemption
+              a.resource-link(href='#') View Rewards →
           .col-lg-3.col-md-6
             .resource-card
               .resource-icon
                 i.fas.fa-users
-              h4.resource-title Dealer Network
-              p.resource-description Connect with other dealers and share best practices
-              a.resource-link(href='#') Join Network →
+              h4.resource-title Community
+              p.resource-description Connect with other panelists and share experiences
+              a.resource-link(href='#') Join Community →
 
     // CTA Section
     .partners-cta-section
       .container
         .cta-content
-          h2.cta-title Ready to Become a Goodyear Dealer?
-          p.cta-description Join thousands of successful dealers and start growing your tire business today.
+          h2.cta-title Ready to Join the Nielsen Panel?
+          p.cta-description Join thousands of panelists and start earning rewards while sharing your shopping insights.
           .cta-buttons
             a.btn.btn-cta-primary.btn-lg(href='/partners/register')
-              i.fas.fa-rocket.me-2
-              | Become a Dealer
+              i.fas.fa-user-plus.me-2
+              | Join the Panel
             a.btn.btn-cta-outline.btn-lg(href='/partners/contact')
-              i.fas.fa-phone.me-2
-              | Contact Sales
+              i.fas.fa-info-circle.me-2
+              | Learn More
 
     // Partners Footer
     footer.partners-footer
       .footer-container
         .footer-content
           .footer-section
-            h4.footer-title Dealer Resources
+            h4.footer-title Panelist Resources
             ul.footer-links
-              li: a(href='#') Dealer Portal
-              li: a(href='#') Product Catalog
-              li: a(href='#') Training Materials
-              li: a(href='#') Support Center
-              li: a(href='#') Partner Directory
+              li: a(href='#') Panelist Portal
+              li: a(href='#') Mobile App
+              li: a(href='#') Help Center
+              li: a(href='#') Rewards Program
+              li: a(href='#') Community Forum
           
           .footer-section
             h4.footer-title Programs
             ul.footer-links
-              li: a(href='#') Technology Partners
-              li: a(href='#') Channel Partners
-              li: a(href='#') Solution Partners
-              li: a(href='#') Integration Partners
-              li: a(href='#') Referral Program
+              li: a(href='#') Basic Panelist
+              li: a(href='#') Active Panelist
+              li: a(href='#') Premium Panelist
+              li: a(href='#') Product Testing
+              li: a(href='#') Focus Groups
           
           .footer-section
             h4.footer-title Support
             ul.footer-links
-              li: a(href='#') Partner Support
-              li: a(href='#') Technical Support
+              li: a(href='#') Panelist Support
+              li: a(href='#') Technical Help
               li: a(href='#') Account Management
-              li: a(href='#') Billing Support
-              li: a(href='#') Partner Success
+              li: a(href='#') Rewards Support
+              li: a(href='#') Panelist Success
           
           .footer-section
             h4.footer-title Legal
             ul.footer-links
-              li: a(href='#') Partner Agreement
+              li: a(href='#') Panelist Agreement
               li: a(href='#') Terms of Service
               li: a(href='#') Privacy Policy
-              li: a(href='#') Compliance
+              li: a(href='#') Data Protection
               li: a(href='#') Legal Notices
           
           .footer-section
             h4.footer-title Connect
             ul.footer-links
-              li: a(href='#') Partner Events
+              li: a(href='#') Panelist Events
               li: a(href='#') Newsletter
               li: a(href='#') Community
-              li: a(href='#') Partner Blog
+              li: a(href='#') Panelist Blog
               li: a(href='#') Contact Us
         
         .footer-bottom
           .footer-bottom-content
-            p.footer-copyright © 2024 AT&T Partner Portal. All rights reserved.
+            p.footer-copyright © 2024 Nielsen Panelist Portal. All rights reserved.
             .footer-bottom-links
               a(href='#') Privacy
               a(href='#') Terms

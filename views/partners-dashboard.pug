@@ -7,15 +7,15 @@ block content
       .dashboard-header.mb-5
         .row.align-items-center
           .col-md-8
-            h1.dashboard-title Organization Dashboard
-            p.dashboard-subtitle Manage your organization members and settings
+            h1.dashboard-title Panelist Dashboard
+            p.dashboard-subtitle Manage your household members and panelist settings
           .col-md-4.text-end
             .org-info
               .org-badge
-                i.fas.fa-building.me-2
+                i.fas.fa-home.me-2
                 span= organization.display_name || orgName
               .org-meta
-                small.text-muted #{members && members.length ? members.length : 0} active member#{members && members.length !== 1 ? 's' : ''}, #{invitations && invitations.length ? invitations.length : 0} pending invitation#{invitations && invitations.length !== 1 ? 's' : ''}
+                small.text-muted #{members && members.length ? members.length : 0} active panelist#{members && members.length !== 1 ? 's' : ''}, #{invitations && invitations.length ? invitations.length : 0} pending invitation#{invitations && invitations.length !== 1 ? 's' : ''}
 
       .row
         // Left Column - Invite New User
@@ -24,8 +24,8 @@ block content
             .card-header
               h3.card-title
                 i.fas.fa-user-plus.me-2
-                | Invite New User
-              p.card-subtitle Add a new member to your organization
+                | Invite New Panelist
+              p.card-subtitle Add a new member to your household
             
             .card-body
               form#inviteUserForm
@@ -42,8 +42,8 @@ block content
                 .form-group.mb-3
                   label.form-label(for="role") Role
                   select.form-control(id="role" name="role")
-                    option(value="org-user") Organization User
-                    option(value="org-admin") Organization Admin
+                    option(value="org-user") Panelist Member
+                    option(value="org-admin") Panelist Admin
                 
                 .form-actions
                   button.btn.btn-primary.btn-lg.w-100(type="submit")
@@ -66,12 +66,12 @@ block content
             .card-header
               h3.card-title
                 i.fas.fa-users.me-2
-                | Active Members
-              p.card-subtitle Members who have accepted their invitations
+                | Active Panelists
+              p.card-subtitle Panelists who have accepted their invitations
               if userPermissions && userPermissions.includes('org:admin')
                 small.text-muted.d-block
                   i.fas.fa-info-circle.me-1
-                  | Note: Other organization admins are hidden from this view
+                  | Note: Other panelist admins are hidden from this view
             
             .card-body
               if members && Array.isArray(members) && members.length > 0
@@ -95,19 +95,19 @@ block content
                           // Show permissions-based role for current user, generic for others
                           if member.user_id === user.sub
                             if userPermissions && userPermissions.includes('org:admin')
-                              span.badge.badge-info Organization Admin
+                              span.badge.badge-info Panelist Admin
                             else if userPermissions && userPermissions.includes('org:user')
-                              span.badge.badge-info Organization User
+                              span.badge.badge-info Panelist Member
                             else
-                              span.badge.badge-secondary Organization User
+                              span.badge.badge-secondary Panelist Member
                           else
-                            span.badge.badge-secondary Organization Member
+                            span.badge.badge-secondary Panelist Member
               else
                 .empty-state
                   .empty-icon
                     i.fas.fa-users
-                  h4.empty-title No Active Members
-                  p.empty-description Members will appear here once they accept their invitations.
+                  h4.empty-title No Active Panelists
+                  p.empty-description Panelists will appear here once they accept their invitations.
 
           // Pending Invitations Section
           .dashboard-card.mb-4
@@ -115,7 +115,7 @@ block content
               h3.card-title
                 i.fas.fa-envelope.me-2
                 | Pending Invitations
-              p.card-subtitle Invitations that haven't been accepted yet
+              p.card-subtitle Panelist invitations that haven't been accepted yet
             
             .card-body
               if invitations && Array.isArray(invitations) && invitations.length > 0
@@ -146,7 +146,7 @@ block content
                   .empty-icon
                     i.fas.fa-envelope
                   h4.empty-title No Pending Invitations
-                  p.empty-description All invitations have been accepted or none have been sent yet.
+                  p.empty-description All panelist invitations have been accepted or none have been sent yet.
 
             // Self-Service SSO Section (Only for org-admins)
             if userPermissions && userPermissions.includes('org:admin')
@@ -155,7 +155,7 @@ block content
                   h3.card-title
                     i.fas.fa-shield-alt.me-2
                     | Self-Service SSO
-                  p.card-subtitle Enable enterprise identity provider connections for your organization
+                  p.card-subtitle Enable enterprise identity provider connections for your household
                 
                 .card-body
                   .sso-info.mb-4
