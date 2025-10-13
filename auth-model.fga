@@ -39,7 +39,13 @@ type balance
     define viewer: [user, user:*]
     define can_view: viewer or owner
 
-# Panel enrollment and management
+# Panel types and categories
+type panel_type
+  relations
+    define available: [user:*]
+    define can_claim: [user:*]
+
+# Individual panel instances
 type panel
   relations
     define owner: [user]
@@ -49,7 +55,8 @@ type panel
     define can_edit: member or owner
     define can_delete: owner
     define can_manage: owner
-    define can_claim: [user]
+    define can_join: [user:*]
+    define can_leave: member or owner
 
 # Panel enrollment status
 type panel_enrollment
@@ -59,6 +66,7 @@ type panel_enrollment
     define active: [user]
     define can_view_status: enrolled or pending or active
     define can_claim: [user:*]
+    define can_leave: enrolled or pending or active
 
 # Tier-based permissions that work with your existing RBAC
 type tier_permission

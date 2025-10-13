@@ -2598,6 +2598,25 @@ hr {
     color: #ffffff;
 }
 
+/* Ensure navigation is not affected by partners page styling */
+.partners-page .grid {
+    background-color: #fff !important;
+}
+
+.partners-page .menu-list {
+    display: inline-flex !important;
+}
+
+.partners-page .menu-list li {
+    color: #000 !important;
+}
+
+.partners-page .menu-list .btn {
+    background-color: #007bff !important;
+    color: #fff !important;
+    border: 1px solid #007bff !important;
+}
+
 .partners-page .section-title {
     color: #ffffff;
 }
@@ -2681,6 +2700,44 @@ hr {
 
 .partners-page .footer-bottom-links a:hover {
     color: #4a9eff;
+}
+
+/* Panel Selection Page - Flexbox Approach */
+.panel-selection-page .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    margin: 0 !important;
+}
+
+.panel-selection-page .col-md-6,
+.panel-selection-page .col-lg-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding: 0.75rem !important;
+    margin-bottom: 1rem !important;
+}
+
+@media (min-width: 768px) {
+    .panel-selection-page .col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .panel-selection-page .col-lg-4 {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+}
+
+.panel-selection-page .card {
+    height: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.panel-selection-page .card-body {
+    padding: 1rem;
 }
 
 /* Self-Service SSO Section Styles */

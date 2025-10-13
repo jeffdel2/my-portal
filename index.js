@@ -2551,34 +2551,149 @@ app.get('/test-fga-response', requiresAuth(), async (req, res) => {
   }
 });
 
-// Claim Panel endpoint
-app.post('/claim-panel', requiresAuth(), async (req, res) => {
+// Panel selection page (Customer)
+app.get('/panels', requiresAuth(), async (req, res) => {
   try {
     const userId = req.oidc.user.sub;
     const { FGAMiddleware } = require('./fga-middleware');
     
-    // Check if user already has an active panel
-    const hasActivePanel = await FGAMiddleware.hasActivePanel(userId);
+    const panelInfo = await FGAMiddleware.getUserPanelInfo(userId);
+    const hasActivePanel = panelInfo.hasActivePanel;
     
-    if (hasActivePanel) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'You already have an active panel enrollment' 
+    res.render('panel-selection', {
+      title: 'Panel Selection',
+      user: req.oidc.user,
+      hasActivePanel,
+      panelInfo
+    });
+  } catch (error) {
+    console.error('Error rendering panel selection page:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Error loading panel selection',
+      error: error.message
+    });
+  }
+});
+
+// Panel selection page (Partner)
+app.get('/partners/panels', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { FGAMiddleware } = require('./fga-middleware');
+    
+    const panelInfo = await FGAMiddleware.getUserPanelInfo(userId);
+    const hasActivePanel = panelInfo.hasActivePanel;
+    
+    res.render('panel-selection', {
+      title: 'Partner Portal',
+      user: req.oidc.user,
+      hasActivePanel,
+      panelInfo
+    });
+  } catch (error) {
+    console.error('Error rendering partner panel selection page:', error);
+    res.status(500).render('error', {
+      title: 'Partner Portal - Error',
+      message: 'Error loading panel selection',
+      error: error.message
+    });
+  }
+});
+
+// Get available panels for user
+app.get('/available-panels', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { FGAMiddleware } = require('./fga-middleware');
+    const { getRecommendedPanels, canUserJoinPanel } = require('./panel-config');
+
+    // Get user's current panels
+    const currentPanels = await FGAMiddleware.getActivePanels(userId);
+    const currentPanelIds = currentPanels.map(panel => panel.replace('panel_enrollment:', ''));
+
+    // Get user profile for recommendations
+    const userProfile = {
+      currentPanels: currentPanelIds.map(id => ({ panelId: id }))
+    };
+
+    // Get recommended panels
+    const recommendedPanels = getRecommendedPanels(userProfile);
+
+    // Check eligibility for each panel
+    const availablePanels = recommendedPanels.map(panel => {
+      const eligibility = canUserJoinPanel(userId, panel.id, userProfile.currentPanels);
+      return {
+        ...panel,
+        canJoin: eligibility.canJoin,
+        reason: eligibility.reason
+      };
+    });
+
+    res.json({
+      success: true,
+      panels: availablePanels,
+      currentPanels: currentPanelIds,
+      totalAvailable: availablePanels.filter(p => p.canJoin).length
+    });
+
+  } catch (error) {
+    console.error('Error getting available panels:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get available panels'
+    });
+  }
+});
+
+// Claim Panel endpoint
+app.post('/claim-panel', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { panelId } = req.body;
+    const { FGAMiddleware } = require('./fga-middleware');
+    const { getPanelType, canUserJoinPanel } = require('./panel-config');
+
+    if (!panelId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Panel ID is required'
       });
     }
-    
-    // Check if user can claim a panel
-    const canClaim = await FGAMiddleware.canClaimPanel(userId);
-    
+
+    // Get panel configuration
+    const panelConfig = getPanelType(panelId);
+    if (!panelConfig) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid panel ID'
+      });
+    }
+
+    // Get user's current panels
+    const currentPanels = await FGAMiddleware.getActivePanels(userId);
+    const currentPanelIds = currentPanels.map(panel => panel.replace('panel_enrollment:', ''));
+
+    // Check if user can join this panel
+    const eligibility = canUserJoinPanel(userId, panelId, currentPanelIds.map(id => ({ panelId: id })));
+    if (!eligibility.canJoin) {
+      return res.status(400).json({
+        success: false,
+        error: eligibility.reason
+      });
+    }
+
+    // Check if user can claim this specific panel
+    const canClaim = await FGAMiddleware.canClaimPanel(userId, panelId);
     if (!canClaim) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'You are not eligible to claim a panel at this time' 
+      return res.status(400).json({
+        success: false,
+        error: 'You are not eligible to claim this panel at this time'
       });
     }
-    
+
     // Claim the panel
-    await FGAMiddleware.claimPanel(userId, 'default');
+    await FGAMiddleware.claimPanel(userId, panelId);
     
     // Update user metadata to track panel enrollment
     try {
@@ -2593,8 +2708,10 @@ app.post('/claim-panel', requiresAuth(), async (req, res) => {
       
       // Add panel enrollment to devices array
       const panelEnrollment = {
-        name: 'Nielsen Consumer Panel',
+        name: panelConfig.name,
         type: 'panel',
+        panelId: panelId,
+        category: panelConfig.category,
         registered_on: new Date().toISOString(),
         status: 'active'
       };
@@ -2623,8 +2740,9 @@ app.post('/claim-panel', requiresAuth(), async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: 'Panel claimed successfully',
-      panelId: 'default'
+      message: `Successfully joined ${panelConfig.name}`,
+      panelId: panelId,
+      panelName: panelConfig.name
     });
     
   } catch (error) {
@@ -2632,6 +2750,79 @@ app.post('/claim-panel', requiresAuth(), async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to claim panel. Please try again.' 
+    });
+  }
+});
+
+// Leave Panel endpoint
+app.post('/leave-panel', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { panelId } = req.body;
+    const { FGAMiddleware } = require('./fga-middleware');
+    const { getPanelType } = require('./panel-config');
+
+    if (!panelId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Panel ID is required'
+      });
+    }
+
+    // Get panel configuration
+    const panelConfig = getPanelType(panelId);
+    const panelName = panelConfig?.name || `Panel ${panelId}`;
+
+    // Leave the panel
+    await FGAMiddleware.leavePanel(userId, panelId);
+
+    // Update user metadata to remove panel enrollment
+    try {
+      const token = await getManagementApiToken();
+      const currentUser = await axios.get(
+        `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const currentMetadata = currentUser.data.user_metadata || {};
+      const currentDevices = currentMetadata.devices || [];
+
+      // Remove panel enrollment from devices array
+      const updatedDevices = currentDevices.filter(device => 
+        !(device.type === 'panel' && device.panelId === panelId)
+      );
+
+      // Update user metadata
+      await axios.patch(
+        `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
+        {
+          user_metadata: {
+            ...currentMetadata,
+            devices: updatedDevices,
+            panel_enrolled: updatedDevices.some(device => device.type === 'panel')
+          }
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log(`Panel enrollment removed from user metadata for ${userId}`);
+    } catch (metadataError) {
+      console.error('Error updating user metadata:', metadataError);
+      // Don't fail the whole request if metadata update fails
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully left ${panelName}`,
+      panelId: panelId,
+      panelName: panelName
+    });
+
+  } catch (error) {
+    console.error('Error leaving panel:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to leave panel. Please try again.'
     });
   }
 });

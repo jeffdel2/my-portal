@@ -36,7 +36,6 @@ class FGAMiddleware {
         relation: relation,
         object: object,
       }]);
-      console.log(`Created FGA relationship: user:${user} ${relation} ${object}`);
     } catch (error) {
       console.error('FGA write error:', error);
       throw error;
@@ -58,7 +57,6 @@ class FGAMiddleware {
           object: object,
         }]
       });
-      console.log(`Deleted FGA relationship: user:${user} ${relation} ${object}`);
     } catch (error) {
       console.error('FGA delete error:', error);
       throw error;
@@ -76,20 +74,20 @@ class FGAMiddleware {
       
       // Validate that we have at least one write or delete
       if (writes.length === 0 && deletes.length === 0) {
-        console.log('No writes or deletes to perform');
         return;
       }
       
       // Prepare the writeTuples call
       const writeTuplesOptions = {};
       if (deletes.length > 0) {
-        writeTuplesOptions.deletes = deletes;
+        writeTuplesOptions.deletes = {
+          tuple_keys: deletes
+        };
       }
       
       // Call writeTuples with writes and/or deletes
       await fgaClient.writeTuples(writes, writeTuplesOptions);
       
-      console.log(`FGA writeTuples completed: ${writes.length} writes, ${deletes.length} deletes`);
     } catch (error) {
       console.error('FGA writeTuples error:', error);
       throw error;
@@ -157,58 +155,25 @@ class FGAMiddleware {
   }
 
   /**
-   * Check if user has an active panel enrollment
+   * Check if user has any active panel enrollments
    * @param {string} userId - User ID (from Auth0)
-   * @returns {Promise<boolean>} - Whether the user has an active panel
+   * @returns {Promise<boolean>} - Whether the user has any active panels
    */
   static async hasActivePanel(userId) {
     try {
-      console.log(`🔍 Checking active panel for user: ${userId}`);
       
-      // Method 1: Check specific panel enrollment directly
-      const checkResult = await fgaClient.check({
-        user: `user:${userId}`,
-        relation: 'active',
-        object: 'panel_enrollment:default',
-      });
-      
-      console.log(`FGA direct check result for user ${userId}:`, checkResult);
-      
-      if (checkResult.allowed) {
-        console.log(`✅ User ${userId} has active panel (direct check)`);
-        return true;
-      }
-      
-      // Method 2: List all objects the user has 'active' relation to
+      // List all panel enrollments the user has 'active' relation to
       const listResult = await fgaClient.listObjects({
         user: `user:${userId}`,
         relation: 'active',
         type: 'panel_enrollment',
       });
       
-      console.log(`FGA listObjects result for user ${userId}:`, JSON.stringify(listResult, null, 2));
       
       // Check if we have any panel enrollments
       if (listResult && listResult.objects && listResult.objects.length > 0) {
-        console.log(`✅ User ${userId} has active panel (listObjects found ${listResult.objects.length} objects)`);
         return true;
       }
-      
-      // Method 3: Alternative - check if user owns any panels
-      const panelOwnership = await fgaClient.listObjects({
-        user: `user:${userId}`,
-        relation: 'owner',
-        type: 'panel',
-      });
-      
-      console.log(`FGA panel ownership for user ${userId}:`, JSON.stringify(panelOwnership, null, 2));
-      
-      if (panelOwnership && panelOwnership.objects && panelOwnership.objects.length > 0) {
-        console.log(`✅ User ${userId} has active panel (owns ${panelOwnership.objects.length} panels)`);
-        return true;
-      }
-      
-      console.log(`❌ User ${userId} has no active panel`);
       return false;
       
     } catch (error) {
@@ -218,18 +183,55 @@ class FGAMiddleware {
   }
 
   /**
-   * Check if user can claim a panel
+   * Get all active panels for a user
    * @param {string} userId - User ID (from Auth0)
-   * @returns {Promise<boolean>} - Whether the user can claim a panel
+   * @returns {Promise<Array>} - Array of active panel IDs
    */
-  static async canClaimPanel(userId) {
+  static async getActivePanels(userId) {
     try {
-      // Check if user can claim a panel (not already enrolled)
+      
+      const listResult = await fgaClient.listObjects({
+        user: `user:${userId}`,
+        relation: 'active',
+        type: 'panel_enrollment',
+      });
+      
+      const activePanels = listResult?.objects || [];
+      
+      return activePanels;
+      
+    } catch (error) {
+      console.error('FGA get active panels error:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if user can claim a specific panel
+   * @param {string} userId - User ID (from Auth0)
+   * @param {string} panelId - Panel ID to check
+   * @returns {Promise<boolean>} - Whether the user can claim the panel
+   */
+  static async canClaimPanel(userId, panelId = 'default') {
+    try {
+      // Check if user is already in this panel
+      const { allowed: alreadyActive } = await fgaClient.check({
+        user: `user:${userId}`,
+        relation: 'active',
+        object: `panel_enrollment:${panelId}`,
+      });
+      
+      if (alreadyActive) {
+        return false;
+      }
+      
+      // Check if user can claim this panel type
       const { allowed } = await fgaClient.check({
         user: `user:${userId}`,
         relation: 'can_claim',
-        object: 'panel_enrollment:default',
+        object: `panel_enrollment:${panelId}`,
       });
+      
       return allowed;
     } catch (error) {
       console.error('FGA panel claim check error:', error);
@@ -245,7 +247,6 @@ class FGAMiddleware {
    */
   static async claimPanel(userId, panelId = 'default') {
     try {
-      console.log(`Starting panel claim for user ${userId}, panel ${panelId}`);
       
       // Create panel ownership relationship
       const panelTuple = {
@@ -254,7 +255,6 @@ class FGAMiddleware {
         object: `panel:${panelId}`,
       };
       
-      console.log('Creating panel ownership tuple:', panelTuple);
       await fgaClient.writeTuples([panelTuple]);
 
       // Create active enrollment relationship
@@ -264,15 +264,8 @@ class FGAMiddleware {
         object: `panel_enrollment:${panelId}`,
       };
       
-      console.log('Creating panel enrollment tuple:', enrollmentTuple);
       await fgaClient.writeTuples([enrollmentTuple]);
 
-      // Verify the tuples were created
-      console.log('Verifying panel claim...');
-      const hasActivePanel = await this.hasActivePanel(userId);
-      console.log(`Verification result - hasActivePanel: ${hasActivePanel}`);
-
-      console.log(`User ${userId} successfully claimed panel ${panelId}`);
     } catch (error) {
       console.error('FGA panel claim error:', error);
       throw error;
@@ -280,13 +273,45 @@ class FGAMiddleware {
   }
 
   /**
-   * Get user's panel information
+   * Leave a panel (remove user from panel)
+   * @param {string} userId - User ID (from Auth0)
+   * @param {string} panelId - Panel ID to leave
+   * @returns {Promise<void>}
+   */
+  static async leavePanel(userId, panelId) {
+    try {
+
+      // Remove panel ownership
+      const panelTuple = {
+        user: `user:${userId}`,
+        relation: 'owner',
+        object: `panel:${panelId}`,
+      };
+
+      // Remove panel enrollment
+      const enrollmentTuple = {
+        user: `user:${userId}`,
+        relation: 'active',
+        object: `panel_enrollment:${panelId}`,
+      };
+
+      
+      // Use the OpenFGA SDK's deleteTuples method
+      await fgaClient.deleteTuples([panelTuple, enrollmentTuple]);
+
+    } catch (error) {
+      console.error('FGA panel leave error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's panel information with detailed panel data
    * @param {string} userId - User ID (from Auth0)
    * @returns {Promise<Object>} - Panel information
    */
   static async getUserPanelInfo(userId) {
     try {
-      console.log(`Getting panel info for user ${userId}`);
       
       // List all panels the user has access to
       const panelResult = await fgaClient.listObjects({
@@ -306,25 +331,37 @@ class FGAMiddleware {
       const enrollments = enrollmentResult?.objects || [];
       const hasActivePanel = enrollments.length > 0;
       
-      console.log(`Panel info for user ${userId}:`, {
-        panels,
-        enrollments,
-        hasActivePanel,
-        rawPanelResult: panelResult,
-        rawEnrollmentResult: enrollmentResult
+      // Get panel configuration details
+      const { getPanelType } = require('./panel-config');
+      const detailedPanels = panels.map(panel => {
+        const panelId = panel.replace('panel:', '');
+        const panelConfig = getPanelType(panelId);
+        return {
+          id: panelId,
+          name: panelConfig?.name || `Panel ${panelId}`,
+          description: panelConfig?.description || 'Panel description not available',
+          category: panelConfig?.category || 'general',
+          icon: panelConfig?.icon || 'fas fa-chart-line',
+          color: panelConfig?.color || '#0066CC',
+          rewards: panelConfig?.rewards || { base: 5, currency: 'USD' },
+          activities: panelConfig?.activities || []
+        };
       });
+      
 
       return {
-        panels,
+        panels: detailedPanels,
         enrollments,
-        hasActivePanel
+        hasActivePanel,
+        totalPanels: detailedPanels.length
       };
     } catch (error) {
       console.error('FGA get panel info error:', error);
       return {
         panels: [],
         enrollments: [],
-        hasActivePanel: false
+        hasActivePanel: false,
+        totalPanels: 0
       };
     }
   }
@@ -336,7 +373,6 @@ class FGAMiddleware {
    */
   static async refreshPanelStatus(userId) {
     try {
-      console.log(`Force refreshing panel status for user ${userId}`);
       
       // Get fresh data from FGA
       const panelInfo = await this.getUserPanelInfo(userId);

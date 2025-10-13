@@ -1,25 +1,36 @@
 const { fgaClient } = require('./fga-client');
+const { getAllPanelTypes } = require('./panel-config');
 
 /**
- * Setup script to initialize panel enrollment data in FGA
- * This creates the default panel enrollment object that all users can claim
+ * Setup script to initialize dynamic panel enrollment data in FGA
+ * This creates panel enrollment objects for all configured panel types
  */
 async function setupPanelEnrollment() {
   try {
-    console.log('Setting up panel enrollment in FGA...');
+    console.log('Setting up dynamic panel enrollment in FGA...');
     
-    // Create the default panel enrollment object that all users can claim
-    // This allows any user to claim a panel enrollment
-    await fgaClient.writeTuples([
-      {
+    // Get all panel types from configuration
+    const panelTypes = getAllPanelTypes();
+    console.log(`Setting up ${panelTypes.length} panel types:`, panelTypes.map(p => p.id));
+    
+    // Create tuples for each panel type
+    const tuples = [];
+    
+    for (const panelType of panelTypes) {
+      // Allow all users to claim each panel type
+      tuples.push({
         user: 'user:*',
         relation: 'can_claim',
-        object: 'panel_enrollment:default',
-      }
-    ]);
+        object: `panel_enrollment:${panelType.id}`,
+      });
+    }
     
-    console.log('✅ Panel enrollment setup completed successfully!');
-    console.log('All users can now claim panel enrollments.');
+    // Write all tuples at once
+    await fgaClient.writeTuples(tuples);
+    
+    console.log('✅ Dynamic panel enrollment setup completed successfully!');
+    console.log(`All users can now claim ${panelTypes.length} different panel types.`);
+    console.log('Panel types configured:', panelTypes.map(p => p.id));
     
   } catch (error) {
     console.error('❌ Error setting up panel enrollment:', error);

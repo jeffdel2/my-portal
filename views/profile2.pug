@@ -53,37 +53,45 @@ block content
                 .panel-status.mb-3
                   .alert.alert-success
                     i.fas.fa-check-circle.me-2
-                    strong Active Panel Member
-                    p.mb-0.mt-1 You are currently enrolled in the Nielsen Consumer Panel.
+                    strong Your Active Panels (#{panelInfo.totalPanels})
+                    p.mb-2.mt-1 You are currently enrolled in #{panelInfo.totalPanels} panel#{panelInfo.totalPanels !== 1 ? 's' : ''}.
                 
-                if user && user.user_metadata && Array.isArray(user.user_metadata.devices) && user.user_metadata.devices.length > 0
-                  ul.list-unstyled
-                    each device, index in user.user_metadata.devices
-                      li.device-item.mb-2
-                        .device-card.p-2.border.rounded
-                          p.mb-1
-                            strong Panel Name:
-                            | #{device.name || 'Unnamed Panel'}
-                          p.mb-0
-                            strong Completed On:
-                            | #{device.registered_on || 'N/A'}
+                if panelInfo.panels && panelInfo.panels.length > 0
+                  .row
+                    each panel in panelInfo.panels
+                      .col-md-6.mb-3
+                        .card.border-0.shadow-sm
+                          .card-body
+                            .d-flex.align-items-center.mb-2
+                              i(class=panel.icon style=`color: ${panel.color}; font-size: 1.5rem; margin-right: 10px;`)
+                              h6.mb-0= panel.name
+                            p.small.text-muted.mb-2= panel.description
+                            .d-flex.justify-content-between.align-items-center
+                              .rewards
+                                span.badge.bg-primary.me-1 $#{panel.rewards.base} base
+                                if panel.rewards.bonus
+                                  span.badge.bg-warning $#{panel.rewards.bonus} bonus
+                              .status
+                                span.badge.bg-success Active
+                  .text-center.mt-3
+                    a.btn.btn-outline-primary(href=title === 'Partner Portal' ? '/partners/panels' : '/panels')
+                      i.fas.fa-plus.me-2
+                      | Join More Panels
                 else
-                  p.text-muted No panel activities recorded yet.
-              else if canClaimPanel
+                  p.text-muted No active panels found.
+              else
                 .panel-claim.mb-3
                   .alert.alert-info
                     i.fas.fa-info-circle.me-2
-                    strong Join the Nielsen Panel
-                    p.mb-2.mt-1 You're not currently enrolled in any consumer panel. Join now to start earning rewards!
+                    strong Join Nielsen Panels
+                    p.mb-2.mt-1 You're not currently enrolled in any consumer panels. Choose from multiple panel types and start earning rewards!
                     .d-flex.gap-2
-                      button.btn.btn-primary.btn-sm#claimPanelBtn
-                        i.fas.fa-user-plus.me-2
-                        | Claim Panel
+                      a.btn.btn-primary.btn-sm(href=title === 'Partner Portal' ? '/partners/panels' : '/panels')
+                        i.fas.fa-chart-line.me-2
+                        | Browse Available Panels
                       button.btn.btn-outline-secondary.btn-sm#refreshPanelBtn
                         i.fas.fa-sync-alt.me-2
                         | Refresh Status
-              else
-                p.text-muted Panel enrollment status unavailable.
           
           // Section Separator
           .section-separator
@@ -367,16 +375,14 @@ block content
     });
 
     // Auto-dismiss profile update success message
-    script.
-      document.addEventListener('DOMContentLoaded', function() {
-        const successMessage = document.getElementById('profileUpdateSuccess');
-        if (successMessage) {
-          // Auto-dismiss after 3 seconds
-          setTimeout(() => {
-            if (successMessage.parentNode) {
-              successMessage.parentNode.removeChild(successMessage);
-            }
-          }, 3000);
-        }
-      });
-      
+    document.addEventListener('DOMContentLoaded', function() {
+      const successMessage = document.getElementById('profileUpdateSuccess');
+      if (successMessage) {
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+          if (successMessage.parentNode) {
+            successMessage.parentNode.removeChild(successMessage);
+          }
+        }, 3000);
+      }
+    });

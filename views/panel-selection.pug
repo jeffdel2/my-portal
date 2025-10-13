@@ -1,0 +1,371 @@
+extends layout
+
+block content
+  .container.mt-4.panel-selection-page
+    .row
+      .col-12
+        h1.mb-4
+          i.fas.fa-chart-line.me-2
+          | Join Nielsen Panels
+        
+        p.lead.mb-4
+          | Choose from our variety of consumer research panels and start earning rewards for sharing your insights.
+
+    // Current Panels Section
+    if hasActivePanel
+      .row.mb-5
+        .col-12
+          .card.border-success
+            .card-header.bg-success.text-white
+              h5.mb-0
+                i.fas.fa-check-circle.me-2
+                | Your Active Panels
+            .card-body
+              if panelInfo.panels && panelInfo.panels.length > 0
+                .row
+                  each panel in panelInfo.panels
+                    .col-md-6.col-lg-4.mb-3
+                      .card
+                        .card-body.text-center
+                          .mb-2
+                            i(class=panel.icon style=`color: ${panel.color}; font-size: 1.5rem;`)
+                          h6.card-title.mb-2= panel.name
+                          .badge.bg-success.mb-2 Active
+                          .mt-2
+                            button.btn.btn-outline-danger.btn-sm.leave-panel-btn(
+                              data-panel-id=panel.id
+                              data-panel-name=panel.name
+                            )
+                              i.fas.fa-sign-out-alt.me-1
+                              | Leave Panel
+              else
+                p.text-muted No active panels found.
+
+    // Available Panels Section
+    .row
+      .col-12
+        .card
+          .card-header
+            h5.mb-0
+              i.fas.fa-plus-circle.me-2
+              | Available Panels
+          .card-body
+            #availablePanels
+              .text-center.py-4
+                .spinner-border.text-primary(role='status')
+                  span.visually-hidden Loading available panels...
+
+    // Panel Categories
+    .row.mt-4
+      .col-12
+        .card
+          .card-header
+            h5.mb-0
+              i.fas.fa-tags.me-2
+              | Panel Categories
+          .card-body
+            .row#panelCategories
+              .text-center.py-4
+                .spinner-border.text-primary(role='status')
+                  span.visually-hidden Loading categories...
+
+  // Panel Details Modal
+  #panelDetailsModal.modal.fade(tabindex='-1')
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5.modal-title#panelModalTitle Panel Details
+          button.btn-close(type='button' data-bs-dismiss='modal')
+        .modal-body#panelModalBody
+          // Panel details will be loaded here
+        .modal-footer
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Close
+          button.btn.btn-primary#joinPanelBtn(type='button' disabled) Join Panel
+
+  // Leave Panel Confirmation Modal
+  #leavePanelModal.modal.fade(tabindex='-1')
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Leave Panel
+          button.btn-close(type='button' data-bs-dismiss='modal')
+        .modal-body
+          p Are you sure you want to leave the 
+            strong#leavePanelName panel
+            | ? You will stop earning rewards from this panel.
+        .modal-footer
+          button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+          button.btn.btn-danger#confirmLeaveBtn(type='button') Leave Panel
+
+  script.
+    let availablePanels = [];
+    let currentPanels = [];
+
+    // Load available panels
+    async function loadAvailablePanels() {
+      try {
+        const response = await fetch('/available-panels');
+        const data = await response.json();
+        
+        if (data.success) {
+          availablePanels = data.panels;
+          currentPanels = data.currentPanels;
+          renderAvailablePanels();
+          renderPanelCategories();
+        } else {
+          showError('Failed to load available panels');
+        }
+      } catch (error) {
+        console.error('Error loading panels:', error);
+        showError('Error loading available panels');
+      }
+    }
+
+    // Render available panels
+    function renderAvailablePanels() {
+      const container = document.getElementById('availablePanels');
+      
+      if (availablePanels.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">No additional panels available at this time.</p>';
+        return;
+      }
+
+      const availablePanelsHtml = availablePanels
+        .filter(panel => panel.canJoin)
+        .map(panel => `
+          <div class="col-md-6.col-lg-4.mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="mb-2">
+                  <i class="${panel.icon}" style="color: ${panel.color}; font-size: 1.5rem;"></i>
+                </div>
+                <h6 class="card-title mb-2">${panel.name}</h6>
+                <div class="mb-2">
+                  <span class="badge bg-primary">$${panel.rewards.base} base</span>
+                  ${panel.rewards.bonus ? `<span class="badge bg-warning">$${panel.rewards.bonus} bonus</span>` : ''}
+                </div>
+                <div class="mt-2">
+                  <button class="btn btn-primary btn-sm join-panel-btn" data-panel-id="${panel.id}">
+                    <i class="fas fa-plus me-1"></i>Join Panel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      container.innerHTML = `
+        <div class="row">
+          ${availablePanelsHtml}
+        </div>
+      `;
+
+      // Add event listeners
+      document.querySelectorAll('.join-panel-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => joinPanel(e.target.dataset.panelId));
+      });
+    }
+
+    // Render panel categories
+    function renderPanelCategories() {
+      const container = document.getElementById('panelCategories');
+      const categories = [...new Set(availablePanels.map(panel => panel.category))];
+      
+      const categoriesHtml = categories.map(category => {
+        const categoryPanels = availablePanels.filter(panel => panel.category === category);
+        const availableCount = categoryPanels.filter(panel => panel.canJoin).length;
+        
+        return `
+          <div class="col-md-6.col-lg-4.mb-3">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center">
+                <h6 class="card-title">${category.charAt(0).toUpperCase() + category.slice(1)}</h6>
+                <p class="card-text small text-muted">${availableCount} panel${availableCount !== 1 ? 's' : ''} available</p>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByCategory('${category}')">
+                  View Panels
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="row">
+          ${categoriesHtml}
+        </div>
+      `;
+    }
+
+    // Show panel details
+    function showPanelDetails(panelId) {
+      const panel = availablePanels.find(p => p.id === panelId);
+      if (!panel) return;
+
+      document.getElementById('panelModalTitle').textContent = panel.name;
+      document.getElementById('panelModalBody').innerHTML = `
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <i class="${panel.icon}" style="color: ${panel.color}; font-size: 3rem;"></i>
+          </div>
+          <div class="col-md-8">
+            <h6>Description</h6>
+            <p>${panel.description}</p>
+            
+            <h6>Rewards</h6>
+            <p>Base: $${panel.rewards.base} ${panel.rewards.currency}</p>
+            ${panel.rewards.bonus ? `<p>Bonus: $${panel.rewards.bonus} ${panel.rewards.currency}</p>` : ''}
+            
+            <h6>Activities</h6>
+            <ul>
+              ${panel.activities.map(activity => `<li>${activity}</li>`).join('')}
+            </ul>
+            
+            <h6>Requirements</h6>
+            <p>Minimum age: ${panel.requirements.minAge}</p>
+            <p>Maximum panels: ${panel.requirements.maxPanels}</p>
+          </div>
+        </div>
+      `;
+
+      const joinBtn = document.getElementById('joinPanelBtn');
+      joinBtn.disabled = !panel.canJoin;
+      joinBtn.onclick = () => joinPanel(panelId);
+      joinBtn.textContent = panel.canJoin ? 'Join Panel' : 'Not Available';
+
+      new bootstrap.Modal(document.getElementById('panelDetailsModal')).show();
+    }
+
+    // Join panel
+    async function joinPanel(panelId) {
+      const btn = document.querySelector(`[data-panel-id="${panelId}"].join-panel-btn`);
+      const originalText = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Joining...';
+
+      try {
+        const response = await fetch('/claim-panel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ panelId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess(data.message);
+          // Reload the page to show updated panel status
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showError(data.error);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      } catch (error) {
+        console.error('Error joining panel:', error);
+        showError('Failed to join panel. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // Leave panel
+    document.querySelectorAll('.leave-panel-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const panelId = e.target.dataset.panelId;
+        const panelName = e.target.dataset.panelName;
+        
+        document.getElementById('leavePanelName').textContent = panelName;
+        document.getElementById('confirmLeaveBtn').onclick = () => confirmLeavePanel(panelId);
+        
+        new bootstrap.Modal(document.getElementById('leavePanelModal')).show();
+      });
+    });
+
+    // Confirm leave panel
+    async function confirmLeavePanel(panelId) {
+      const btn = document.getElementById('confirmLeaveBtn');
+      const originalText = btn.textContent;
+      
+      btn.disabled = true;
+      btn.textContent = 'Leaving...';
+
+      try {
+        const response = await fetch('/leave-panel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ panelId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess(data.message);
+          // Reload the page to show updated panel status
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showError(data.error);
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      } catch (error) {
+        console.error('Error leaving panel:', error);
+        showError('Failed to leave panel. Please try again.');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    // Filter by category
+    function filterByCategory(category) {
+      const filteredPanels = availablePanels.filter(panel => panel.category === category && panel.canJoin);
+      // You could implement a more sophisticated filtering UI here
+      console.log(`Filtering by category: ${category}`, filteredPanels);
+    }
+
+    // Utility functions
+    function showSuccess(message) {
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+      alert.style.top = '20px';
+      alert.style.right = '20px';
+      alert.style.zIndex = '9999';
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.parentNode.removeChild(alert);
+        }
+      }, 5000);
+    }
+
+    function showError(message) {
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+      alert.style.top = '20px';
+      alert.style.right = '20px';
+      alert.style.zIndex = '9999';
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.parentNode.removeChild(alert);
+        }
+      }, 5000);
+    }
+
+    // Load panels on page load
+    document.addEventListener('DOMContentLoaded', loadAvailablePanels);

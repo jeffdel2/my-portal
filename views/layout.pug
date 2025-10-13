@@ -99,6 +99,8 @@ html
                               li
                                 a.header(href='/partners/dashboard') Dashboard
                               li
+                                a.header(href='/partners/panels') Panels
+                              li
                                 a.header(href='/partners/tokens') Tokens
                               li
                                 a.header(href='/partners/resources') Resources
@@ -118,68 +120,70 @@ html
                               button.btn.btn-primary(onclick="window.location.href='/logout'") Logout
                         else
                             if title === 'Partner Portal'
-                              li
-                                a.header(href='/partners') Home
-                              li 
-                                a.header(href='/partners/resources') Resources
-                              li
-                                a.header(href='/partners/support') Support                     
-                              li 
-                                a.header(href='/partners/register') Join&nbspthe&nbspPanel
+                                li
+                                    a.header(href='/partners') Home
+                                li 
+                                    a.header(href='/partners/resources') Resources
+                                li
+                                    a.header(href='/partners/support') Support                     
+                                li 
+                                    a.header(href='/partners/register') Join&nbspthe&nbspPanel
                             else
-                              li
-                                a.header(href='/tires') Tires
-                              li 
-                                a.header(href='/') Services
-                              li
-                                a.header(href='/') Learn                     
+                                li
+                                    a.header(href='/tires') Tires
+                                li 
+                                    a.header(href='/panels') Panels
+                                li
+                                    a.header(href='/') Services
+                                li
+                                    a.header(href='/') Learn
                             li 
-                            if title === 'Partner Portal'
-                              button.btn.btn-primary(onclick="window.location.href='/partners/login'") Panelist&nbspLogin
-                            else
-                              button.btn.btn-primary(onclick="window.location.href='/login'") Customer&nbspLogin 
-                            //-li
-                            //-button.openbtn(type="button", id="loginCoBtn", onclick="openSlideout()") Login
+                                if title === 'Partner Portal'
+                                    button.btn.btn-primary(onclick="window.location.href='/partners/login'") Panelist&nbspLogin
+                                else
+                                    button.btn.btn-primary(onclick="window.location.href='/login'") Customer&nbspLogin
 
-                //- .box(class='text-wrapper-2')
-                    if user
-                        p Hello, 
-                            a(href='/user')=user.name
-                        //- img(class="img" alt="Person" src="/images/person.svg")
-                    else
-                        //- a.login(href='/login') Log In
-                        a.logout(href='/login')
-                            //-<span class="material-symbols-outlined">person</span>
-                            <i class="material-symbols-outlined" fontSize="large">person</i>
+        //- .box(class='text-wrapper-2')
+        //-     if user
+        //-         p Hello, 
+        //-             a(href='/user')=user.name
+        //-         //- img(class="img" alt="Person" src="/images/person.svg")
+        //-     else
+        //-         //- a.login(href='/login') Log In
+        //-         a.logout(href='/login')
+        //-             //-<span class="material-symbols-outlined">person</span>
+        //-             i.material-symbols-outlined(fontSize="large") person
+        
+        //- .box(class='text-wrapper-2')
+        //-     ul(class='menu-list')
+        //-         li
+        //-             a.header(href='/') Kitchen
+        //-         li 
+        //-             a.header(href='/') Laundry & Home
+        //-         li
+        //-             a.header(href='/') Water Filters, Parts & Accessories 
+        //-         li 
+        //-             a.header(href='/') Blog
+        //-         li 
+        //-             a.header(href='/') Sale
             
-            //- .box(class='text-wrapper-2')
-                    ul(class='menu-list')
-                        li
-                          a.header(href='/') Kitchen
-                        li 
-                          a.header(href='/') Laundry & Home
-                        li
-                          a.header(href='/') Water Filters, Parts & Accessories 
-                        li 
-                          a.header(href='/') Blog
-                        li 
-                          a.header(href='/') Sale
-            
-            block content
-            
-            #mySlideout.slideout-panel
-              ul(class='slideout-list')
-                li 
-                  a(href="javascript:void(0)", class="closebtn", onclick="closeSlideout()") × Back to main Page
-                li Sign In
-                li
-                  label(for="username") Username/Email*
-                  input.input-field(type="text", id="username", name="username")
-                li
-                  label(for="password") Password* 
-                  input.input-field(type="password", id="password", name="password")
-                li
-                  button.openbtn(type="button", id="loginCoBtn", onclick="submitLogin()") Login
-              
-            .home-page
+        #mySlideout.slideout-panel
+          ul(class='slideout-list')
+            li 
+              a(href="javascript:void(0)", class="closebtn", onclick="closeSlideout()") × Back to main Page
+            li Sign In
+            li
+              label(for="username") Username/Email*
+              input.input-field(type="text", id="username", name="username")
+            li
+              label(for="password") Password* 
+              input.input-field(type="password", id="password", name="password")
+            li
+              button.openbtn(type="button", id="loginCoBtn", onclick="submitLogin()") Login
+        
+        .home-page
+          block content
+
+        // Bootstrap JavaScript
+        script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
                 
