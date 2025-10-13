@@ -1072,6 +1072,12 @@ app.get('/partners/profile', requiresAuth(), async (req, res) => {
 		// Check for profile update success message
 		const updated = req.query.updated === 'true'
 
+		// Check FGA for panel enrollment status
+		const { FGAMiddleware } = require('./fga-middleware');
+		const panelInfo = await FGAMiddleware.getUserPanelInfo(userId);
+		const hasActivePanel = panelInfo.hasActivePanel;
+		const canClaimPanel = !hasActivePanel; // Can claim if no active panel
+
 		const clientId = `${process.env.CLIENT_ID}`;
 		const mgmtUrl = `${process.env.MGMT_BASE_URL}`;
 		const issuerUrl = `${process.env.ISSUER_BASE_URL}`;
@@ -1088,7 +1094,10 @@ app.get('/partners/profile', requiresAuth(), async (req, res) => {
 			issuerUrl,
 			mgmtUrl,
 			appUrl,
-			updateSuccess: updated
+			updateSuccess: updated,
+			hasActivePanel,
+			canClaimPanel,
+			panelInfo
 		})
 	} catch (error) {
 		console.error('Error rendering partners profile page:', error)
@@ -1993,6 +2002,12 @@ app.get('/profile', requiresAuth(), async (req, res) => {
   // Check if this is a successful update redirect
   const updateSuccess = req.query.updated === 'true';
   
+  // Check FGA for panel enrollment status
+  const { FGAMiddleware } = require('./fga-middleware');
+  const panelInfo = await FGAMiddleware.getUserPanelInfo(userId);
+  const hasActivePanel = panelInfo.hasActivePanel;
+  const canClaimPanel = !hasActivePanel; // Can claim if no active panel
+  
   res.render('profile2', 
 	{ user: res.locals.user, 
 	  factors: res.locals.factors, 
@@ -2000,7 +2015,10 @@ app.get('/profile', requiresAuth(), async (req, res) => {
 	  issuerUrl, 
 	  mgmtUrl, 
 	  appUrl,
-	  updateSuccess: updateSuccess
+	  updateSuccess: updateSuccess,
+	  hasActivePanel,
+	  canClaimPanel,
+	  panelInfo
 	});
 });
 
@@ -2417,6 +2435,205 @@ app.use(async (req, res, next) => {
     }
   }
   next();
+});
+
+// Setup panel enrollment (admin only - for initial setup)
+app.post('/setup-panel-enrollment', async (req, res) => {
+  try {
+    const { setupPanelEnrollment } = require('./setup-panel-enrollment');
+    await setupPanelEnrollment();
+    
+    res.json({ 
+      success: true, 
+      message: 'Panel enrollment setup completed successfully' 
+    });
+  } catch (error) {
+    console.error('Error setting up panel enrollment:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to setup panel enrollment' 
+    });
+  }
+});
+
+// Debug panel enrollment status
+app.get('/debug-panel-status', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { FGAMiddleware } = require('./fga-middleware');
+    
+    const debugInfo = {
+      userId,
+      hasActivePanel: await FGAMiddleware.hasActivePanel(userId),
+      canClaimPanel: await FGAMiddleware.canClaimPanel(userId),
+      panelInfo: await FGAMiddleware.getUserPanelInfo(userId),
+      timestamp: new Date().toISOString()
+    };
+    
+    res.json(debugInfo);
+  } catch (error) {
+    console.error('Error debugging panel status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
+
+// Refresh panel status (force fresh FGA check)
+app.post('/refresh-panel-status', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { FGAMiddleware } = require('./fga-middleware');
+    
+    const refreshedInfo = await FGAMiddleware.refreshPanelStatus(userId);
+    
+    res.json({
+      success: true,
+      message: 'Panel status refreshed',
+      data: refreshedInfo
+    });
+  } catch (error) {
+    console.error('Error refreshing panel status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// Test FGA response structure
+app.get('/test-fga-response', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { fgaClient } = require('./fga-client');
+    
+    console.log(`Testing FGA response for user: ${userId}`);
+    
+    // Test panel ownership
+    const panelResult = await fgaClient.listObjects({
+      user: `user:${userId}`,
+      relation: 'owner',
+      type: 'panel',
+    });
+    
+    // Test panel enrollment
+    const enrollmentResult = await fgaClient.listObjects({
+      user: `user:${userId}`,
+      relation: 'active',
+      type: 'panel_enrollment',
+    });
+    
+    // Test direct check
+    const checkResult = await fgaClient.check({
+      user: `user:${userId}`,
+      relation: 'active',
+      object: 'panel_enrollment:default',
+    });
+    
+    res.json({
+      success: true,
+      userId,
+      panelOwnership: panelResult,
+      panelEnrollment: enrollmentResult,
+      directCheck: checkResult,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Error testing FGA response:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack 
+    });
+  }
+});
+
+// Claim Panel endpoint
+app.post('/claim-panel', requiresAuth(), async (req, res) => {
+  try {
+    const userId = req.oidc.user.sub;
+    const { FGAMiddleware } = require('./fga-middleware');
+    
+    // Check if user already has an active panel
+    const hasActivePanel = await FGAMiddleware.hasActivePanel(userId);
+    
+    if (hasActivePanel) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'You already have an active panel enrollment' 
+      });
+    }
+    
+    // Check if user can claim a panel
+    const canClaim = await FGAMiddleware.canClaimPanel(userId);
+    
+    if (!canClaim) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'You are not eligible to claim a panel at this time' 
+      });
+    }
+    
+    // Claim the panel
+    await FGAMiddleware.claimPanel(userId, 'default');
+    
+    // Update user metadata to track panel enrollment
+    try {
+      const token = await getManagementApiToken();
+      const currentUser = await axios.get(
+        `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const currentMetadata = currentUser.data.user_metadata || {};
+      const currentDevices = currentMetadata.devices || [];
+      
+      // Add panel enrollment to devices array
+      const panelEnrollment = {
+        name: 'Nielsen Consumer Panel',
+        type: 'panel',
+        registered_on: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      currentDevices.push(panelEnrollment);
+      
+      // Update user metadata
+      await axios.patch(
+        `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`,
+        {
+          user_metadata: {
+            ...currentMetadata,
+            devices: currentDevices,
+            panel_enrolled: true,
+            panel_enrolled_date: new Date().toISOString()
+          }
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      console.log(`Panel enrollment added to user metadata for ${userId}`);
+    } catch (metadataError) {
+      console.error('Error updating user metadata:', metadataError);
+      // Don't fail the request if metadata update fails
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Panel claimed successfully',
+      panelId: 'default'
+    });
+    
+  } catch (error) {
+    console.error('Error claiming panel:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to claim panel. Please try again.' 
+    });
+  }
 });
 
 // 404 handler
