@@ -108,14 +108,11 @@ html
                                 a.header(href='/partners/support') Support
                             else
                               li
-                                a.header(href='/tires') Tires
-                              li
                                 a.header(href='/tokens') Tokens
                               li
                                 a.header(href='https://saml-sample.glitch.me/profile') Services
-                              //-if userTier === 'free'
-                                li
-                                  a.header.upgrade-btn(href='/upgrade') Upgrade
+                              li
+                                a.header.upgrade-btn(href='/upgrade') Upgrade Plan
                             li
                               button.btn.btn-primary(onclick="window.location.href='/logout'") Logout
                         else
@@ -129,14 +126,14 @@ html
                                 li 
                                     a.header(href='/partners/register') Join&nbspthe&nbspPanel
                             else
-                                li
-                                    a.header(href='/tires') Tires
                                 li 
                                     a.header(href='/panels') Panels
                                 li
                                     a.header(href='/') Services
                                 li
                                     a.header(href='/') Learn
+                                li
+                                    a.header.upgrade-btn(href='/upgrade') Upgrade Plan
                             li 
                                 if title === 'Partner Portal'
                                     button.btn.btn-primary(onclick="window.location.href='/partners/login'") Panelist&nbspLogin
@@ -183,6 +180,48 @@ html
         
         .home-page
           block content
+
+        // Customer footer (not shown on Partner Portal pages)
+        if title !== 'Partner Portal'
+          footer.footer
+            .footer-container
+              .footer-content
+                .footer-section
+                  h4.footer-title About Nielsen
+                  ul.footer-links
+                    li: a(href='/') Company
+                    li: a(href='/') Careers
+                    li: a(href='/') Newsroom
+                    li: a(href='/') Contact
+                .footer-section
+                  h4.footer-title Solutions
+                  ul.footer-links
+                    li: a(href='/panels') Consumer Panels
+                    li: a(href='/') Audience Measurement
+                    li: a(href='/') Analytics
+                    li: a(href='/') Insights
+                .footer-section
+                  h4.footer-title Support
+                  ul.footer-links
+                    li: a(href='/') Help Center
+                    li: a(href='/') Documentation
+                    li: a(href='/') Developer APIs
+                    li: a(href='/') Community
+                .footer-section
+                  h4.footer-title Legal
+                  ul.footer-links
+                    li: a(href='/') Privacy Policy
+                    li: a(href='/') Terms of Service
+                    li: a(href='/') Cookie Policy
+                    li: a(href='/') Accessibility
+            .footer-bottom
+              .footer-bottom-content
+                p.footer-copyright © 2024 Nielsen Panelist Portal. All rights reserved.
+                .footer-bottom-links
+                  a(href='/') Privacy
+                  a(href='/') Terms
+                  a(href='/') Accessibility
+                  a(href='/') Sitemap
 
         // Bootstrap JavaScript
         script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

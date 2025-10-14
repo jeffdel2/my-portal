@@ -17,7 +17,7 @@
   background-image: linear-gradient(
     rgba(255, 255, 255, 0.5), 
     rgba(255, 255, 255, 0.5)
-), url("https://shop.cognibox.net/web/image/product.template/1576/image_1024?unique=0558d2a");
+), url("https://www.nielsen.com/wp-content/uploads/sites/2/2021/10/1200x675_client_login_page_meta.png");
   background-size: cover;
   background-repeat: no-repeat;
   display: flex;
@@ -1643,6 +1643,29 @@ body {
     margin: 0;
     padding: 0;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Sticky footer layout */
+html, body { height: 100%; }
+
+footer.footer {
+    background: #0f172a; /* deep navy for Nielsen */
+    color: #e2e8f0;
+    width: 100%;
+    margin-top: auto; /* push footer to bottom */
+}
+
+.footer-title {
+    color: #93c5fd; /* light Nielsen blue */
+    border-bottom-color: #3b82f6; /* Nielsen blue */
+}
+
+.footer-links a:hover,
+.footer-bottom-links a:hover {
+    color: #3b82f6;
 }
 
 .container {

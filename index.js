@@ -793,140 +793,6 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 	}
 });
 
-// Tires shopping cart page
-app.get('/tires', (req, res) => {
-	res.render('tires', {
-		title: 'Tires - Shop Tires Online',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
-
-// Checkout page
-app.get('/checkout', (req, res) => {
-	console.log('Checkout route - User object:', req.oidc?.user);
-	console.log('Checkout route - User name:', req.oidc?.user?.name);
-	console.log('Checkout route - Is authenticated:', req.oidc?.isAuthenticated());
-	console.log('Checkout route - Query params:', req.query);
-	
-	// If user has auth code but isn't authenticated, redirect to proper callback
-	if (!req.oidc?.isAuthenticated() && req.query.code) {
-		console.log('User has auth code but not authenticated - redirecting to callback');
-		// Store returnTo in session before redirecting to callback
-		if (req.query.returnTo) {
-			req.session.returnTo = req.query.returnTo;
-		} else {
-			req.session.returnTo = '/checkout';
-		}
-		// Redirect to the proper Auth0 callback endpoint
-		const callbackUrl = `/callback?${new URLSearchParams(req.query).toString()}`;
-		return res.redirect(callbackUrl);
-	}
-	
-	res.render('checkout', {
-		title: 'Checkout - Complete Your Tire Order',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
-
-
-// Get user metadata
-app.get('/user-metadata', async (req, res) => {
-	try {
-		if (!req.oidc?.user) {
-			return res.status(401).json({ error: 'User not authenticated' });
-		}
-
-		// Get management API token
-		const token = await getManagementApiToken();
-
-		// Get user metadata
-		const response = await axios.get(
-			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		res.json(response.data.user_metadata || {});
-
-	} catch (error) {
-		console.error('Error getting user metadata:', error.response?.data || error.message);
-		res.status(500).json({ error: 'Failed to get user metadata' });
-	}
-});
-
-// Save shipping information to user metadata
-app.post('/save-shipping-info', async (req, res) => {
-	try {
-		if (!req.oidc?.user) {
-			return res.status(401).json({ error: 'User not authenticated' });
-		}
-
-		const { firstName, lastName, address, city, state, zipCode, phone, email } = req.body;
-
-		// Validate required fields
-		if (!firstName || !lastName || !address || !city || !state || !zipCode || !phone || !email) {
-			return res.status(400).json({ error: 'All shipping fields are required' });
-		}
-
-		// Get management API token
-		const token = await getManagementApiToken();
-
-		// Prepare shipping information for user_metadata
-		const shippingInfo = {
-			address,
-			city,
-			state,
-			zipCode,
-			email,
-			lastUpdated: new Date().toISOString()
-		};
-
-		// Update user metadata with standalone fields and shipping info
-		const response = await axios.patch(
-			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
-			{
-				user_metadata: {
-					first_name: firstName,
-					last_name: lastName,
-					phone: phone,
-					shippingInfo: shippingInfo
-				}
-			},
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		console.log('Shipping info saved for user:', req.oidc.user.sub);
-		res.json({ success: true, message: 'Shipping information saved successfully' });
-
-	} catch (error) {
-		console.error('Error saving shipping info:', error.response?.data || error.message);
-		res.status(500).json({ error: 'Failed to save shipping information' });
-	}
-});
-
-// Order success page
-app.get('/order-success', (req, res) => {
-	res.render('order-success', {
-		title: 'Order Confirmed - Thank You!',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
-
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
 	// Use partners-specific login with organization context
@@ -1923,9 +1789,14 @@ app.post('/upgrade', requiresAuth(), async (req, res) => {
       upgradedAt: new Date().toISOString()
     };
     
-    // Force a complete logout/login to ensure fresh tokens with new permissions
-    res.oidc.logout({
-      returnTo: '/upgrade-success?upgraded=true&tier=' + tier
+    // Refresh tokens via re-auth without logging the user out
+    return res.oidc.login({
+      returnTo: '/upgrade-success?upgraded=true&tier=' + tier,
+      authorizationParams: {
+        prompt: 'consent',
+        audience: process.env.AUDIENCE,
+        scope: process.env.SCOPE
+      }
     });
     
   } catch (error) {
@@ -1954,10 +1825,10 @@ app.get('/profile_old', requiresAuth(), async (req, res) => {
 });
 
 app.get('/profile', requiresAuth(), async (req, res) => {
+  const userId = req.oidc.user.sub;
   try {
     // Define the URLs for the two APIs you want to call
     const token = await getManagementApiToken()
-    const userId = req.oidc.user.sub;
     const authz_header = { Authorization: `Bearer ${token}` };
     
     const url1 = `${process.env.MGMT_BASE_URL}/api/v2/users/${userId}`;
