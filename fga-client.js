@@ -16,4 +16,6 @@ const fgaClient = new OpenFgaClient({
   },
 });
 
+// FGA Client Configuration
+
 module.exports = { fgaClient };
