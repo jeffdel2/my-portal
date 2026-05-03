@@ -8,19 +8,19 @@ block content
           .success-card.text-center
             .success-icon.mb-4
               i.fas.fa-check-circle.fa-5x.text-success
-            h1.display-4.mb-3 Order Confirmed!
-            p.lead.mb-4 Thank you for your tire purchase. Your order has been successfully processed.
+            h1.display-4.mb-3 Appointment Confirmed!
+            p.lead.mb-4 Thank you for booking your healthcare service. Your appointment has been successfully confirmed.
             
             .order-details
               .detail-item
-                span.label Order Number:
-                span.value #TIR-2024-001234
+                span.label Appointment Number:
+                span.value #APT-2024-001234
               .detail-item
-                span.label Estimated Delivery:
+                span.label Appointment Window:
                 span.value 3-5 business days
               .detail-item
-                span.label Installation Appointment:
-                span.value We'll contact you to schedule
+                span.label Consultation Appointment:
+                span.value We'll contact you to confirm
             
             .next-steps.mt-5
               h4.mb-3 What's Next?
@@ -29,20 +29,20 @@ block content
                   .step-card
                     i.fas.fa-envelope.fa-2x.text-primary.mb-3
                     h6 Email Confirmation
-                    p.text-muted You'll receive an order confirmation email shortly
+                    p.text-muted You'll receive an appointment confirmation email shortly
                 .col-md-4.mb-3
                   .step-card
                     i.fas.fa-phone.fa-2x.text-primary.mb-3
-                    h6 Installation Call
-                    p.text-muted We'll call you within 24 hours to schedule installation
+                    h6 Confirmation Call
+                    p.text-muted We'll call you within 24 hours to confirm your appointment
                 .col-md-4.mb-3
                   .step-card
-                    i.fas.fa-truck.fa-2x.text-primary.mb-3
-                    h6 Delivery & Installation
-                    p.text-muted Your tires will be delivered and professionally installed
+                    i.fas.fa-hospital.fa-2x.text-primary.mb-3
+                    h6 Service Consultation
+                    p.text-muted Your consultation will be provided by a healthcare professional
             
             .action-buttons.mt-5
-              a.btn.btn-primary.btn-lg.me-3(href='/tires') Continue Shopping
+              a.btn.btn-primary.btn-lg.me-3(href='/services') Browse More Services
               a.btn.btn-outline-primary.btn-lg(href='/') Return Home
 
   style.
@@ -101,7 +101,7 @@ block content
     
     .detail-item .label {
       font-weight: 600;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .detail-item .value {
@@ -117,7 +117,7 @@ block content
     }
     
     .step-card h6 {
-      color: #004ea8;
+      color: #0066CC;
       margin-bottom: 10px;
     }
     

@@ -1,12 +1,12 @@
 :root {
     --color-x: rgba(193, 220, 220, 1);
-    --color-1: #004ea8;
+    --color-1: #0066CC;
     --color-2: #ffffff;
     --color-3: rgba(30, 30, 30, 0.75);
     --color-4: rgba(30, 30, 30, 0.5);
     --color-5: white;
-    --brand-primary: #004ea8;
-    --brand-secondary: #ffc107;
+    --brand-primary: #0066CC;
+    --brand-secondary: #00CC88;
     --brand-primary-light: #3366bb;
     --brand-secondary-light: #ffd54f;
     --main-font: "HelveticaNeue", sans-serif;
@@ -139,7 +139,7 @@ ul.header li {
     font-size: 1rem;
     padding: 0 1rem;
     color: #000000;
-    background-color: #004ea8;
+    background-color: #0066CC;
     display: inline-flex;
 }
 
@@ -1925,7 +1925,7 @@ hr {
 
 /* Upgrade Button Styles */
 .upgrade-btn {
-    background: linear-gradient(135deg, #ffc107, #ffb300) !important;
+    background: linear-gradient(135deg, #00CC88, #ffb300) !important;
     color: #000000 !important;
     border: none !important;
     padding: 10px 20px !important;
@@ -2497,7 +2497,7 @@ hr {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 20px;
-    border-bottom: 2px solid #ffc107;
+    border-bottom: 2px solid #00CC88;
     padding-bottom: 8px;
 }
 
@@ -2519,7 +2519,7 @@ hr {
 }
 
 .footer-links a:hover {
-    color: #004ea8;
+    color: #0066CC;
     text-decoration: underline;
 }
 
@@ -2555,7 +2555,7 @@ hr {
 }
 
 .footer-bottom-links a:hover {
-    color: #004ea8;
+    color: #0066CC;
     text-decoration: underline;
 }
 
@@ -2718,7 +2718,7 @@ hr {
 }
 
 .sso-request-section .btn-primary {
-    background: linear-gradient(135deg, #004ea8, #003d87);
+    background: linear-gradient(135deg, #0066CC, #003d87);
     border: none;
     padding: 15px 40px;
     font-weight: 600;
@@ -3203,7 +3203,7 @@ hr {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #004ea8, #003d87);
+    background: linear-gradient(135deg, #0066CC, #003d87);
     border: none;
     color: white;
     padding: 15px 30px;

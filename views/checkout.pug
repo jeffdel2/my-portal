@@ -6,8 +6,8 @@ block content
       .row
         .col-12
           .page-header.text-center.mb-4
-            h1.display-5.mb-3 Complete Your Tire Order
-            p.lead Review your items and complete your purchase
+            h1.display-5.mb-3 Confirm Your Appointment
+            p.lead Review your selected services and complete your booking
             
             // Authentication Status
             if user && user.name
@@ -24,35 +24,35 @@ block content
         
         .col-lg-8
           .checkout-section
-            h4.section-title Order Summary
+            h4.section-title Appointment Summary
             #orderItems.order-items
             
             .checkout-section
-              h4.section-title Installation & Services
+              h4.section-title Additional Services
               .service-options
                 .form-check.mb-3
                   input.form-check-input(type="checkbox" id="installation" checked)
                   label.form-check-label(for="installation")
-                    strong Professional Installation
-                    span.text-muted.d-block Includes mounting, balancing, and valve stems
-                    span.price $15.00 per tire
-                
+                    strong Patient Intake & Consultation
+                    span.text-muted.d-block Comprehensive initial patient assessment and care planning
+                    span.price $15.00 per service
+
                 .form-check.mb-3
                   input.form-check-input(type="checkbox" id="alignment")
                   label.form-check-label(for="alignment")
-                    strong Wheel Alignment Check
-                    span.text-muted.d-block Ensure proper wheel alignment after installation
+                    strong Care Coordination Assessment
+                    span.text-muted.d-block Integrated care coordination for ongoing health management
                     span.price $80.00
-                
+
                 .form-check.mb-3
                   input.form-check-input(type="checkbox" id="disposal")
                   label.form-check-label(for="disposal")
-                    strong Old Tire Disposal
-                    span.text-muted.d-block Environmentally responsible disposal of old tires
-                    span.price $5.00 per tire
+                    strong Medical Records Transfer
+                    span.text-muted.d-block Secure transfer of medical records from previous providers
+                    span.price $5.00 per service
             
             .checkout-section
-              h4.section-title Delivery Information
+              h4.section-title Patient Information
               .row
                 .col-md-6
                   .form-group.mb-3
@@ -96,19 +96,19 @@ block content
         .col-lg-4
           .order-summary
             .summary-card
-              h5.summary-title Order Summary
+              h5.summary-title Appointment Summary
               #summaryItems.summary-items
               .summary-line
                 span Subtotal:
                 span#subtotal $0.00
               .summary-line
-                span Installation:
+                span Consultation:
                 span#installationCost $0.00
               .summary-line
-                span Alignment:
+                span Care Coordination:
                 span#alignmentCost $0.00
               .summary-line
-                span Disposal:
+                span Records Transfer:
                 span#disposalCost $0.00
               .summary-line
                 span Tax:
@@ -135,7 +135,7 @@ block content
                     i.fas.fa-percentage.me-2
                     | Financing (0% APR for 12 months)
                 
-                button.btn.btn-primary.btn-lg.w-100.mb-3(onclick="processPayment()") Complete Order
+                button.btn.btn-primary.btn-lg.w-100.mb-3(onclick="processPayment()") Confirm Appointment
                 
                 .security-badge.text-center
                   i.fas.fa-shield-alt.text-success.me-2
@@ -158,10 +158,10 @@ block content
     }
     
     .section-title {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 20px;
-      border-bottom: 2px solid #ffc107;
+      border-bottom: 2px solid #00CC88;
       padding-bottom: 8px;
     }
     
@@ -183,7 +183,7 @@ block content
     
     .item-info h6 {
       margin: 0;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .item-info p {
@@ -194,7 +194,7 @@ block content
     
     .item-price {
       font-weight: 600;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .service-options .form-check {
@@ -205,11 +205,11 @@ block content
     }
     
     .service-options .form-check-input:checked + .form-check-label {
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .service-options .price {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       float: right;
     }
@@ -227,10 +227,10 @@ block content
     }
     
     .summary-title {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 20px;
-      border-bottom: 2px solid #ffc107;
+      border-bottom: 2px solid #00CC88;
       padding-bottom: 8px;
     }
     
@@ -253,12 +253,12 @@ block content
     }
     
     .summary-total {
-      border-top: 2px solid #004ea8;
+      border-top: 2px solid #0066CC;
       padding-top: 15px;
       margin-top: 15px;
       font-weight: 700;
       font-size: 1.1rem;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .payment-section {
@@ -268,7 +268,7 @@ block content
     }
     
     .payment-title {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 15px;
     }
@@ -307,7 +307,7 @@ block content
     
     // Load cart from sessionStorage
     function loadCart() {
-      const cartData = sessionStorage.getItem('tireCart');
+      const cartData = sessionStorage.getItem('serviceCart');
       if (cartData) {
         cartItems = JSON.parse(cartData);
         displayOrderItems();
@@ -405,10 +405,10 @@ block content
     console.log('User object:', !{JSON.stringify(user || {})});
     
     // Restore cart from backup if returning from Auth0
-    const cartBackup = sessionStorage.getItem('tireCartBackup');
-    if (cartBackup && !sessionStorage.getItem('tireCart')) {
-      sessionStorage.setItem('tireCart', cartBackup);
-      sessionStorage.removeItem('tireCartBackup');
+    const cartBackup = sessionStorage.getItem('serviceCartBackup');
+    if (cartBackup && !sessionStorage.getItem('serviceCart')) {
+      sessionStorage.setItem('serviceCart', cartBackup);
+      sessionStorage.removeItem('serviceCartBackup');
       console.log('Cart restored from backup');
     }
     
@@ -509,7 +509,7 @@ block content
         
         setTimeout(() => {
           // Clear cart
-          sessionStorage.removeItem('tireCart');
+          sessionStorage.removeItem('serviceCart');
           
           // Redirect to success page
           window.location.href = '/order-success';

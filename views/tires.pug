@@ -6,58 +6,61 @@ block content
       .row
         .col-12
           .page-header.text-center.mb-5
-            h1.display-4.mb-3 Shop Tires Online
-            p.lead Find the perfect tires for your vehicle with our comprehensive selection and expert guidance.
+            h1.display-4.mb-3 Browse Our Healthcare Services
+            p.lead Find the right care for your needs with our comprehensive service packages and expert providers.
       
       .row
         .col-lg-3
           .filter-sidebar
             .filter-card
-              h5.filter-title Vehicle Information
+              h5.filter-title Patient Information
               .form-group.mb-3
-                label.form-label Year
-                select.form-select#yearSelect
-                  option(value="") Select Year
-                  option(value="2024") 2024
-                  option(value="2023") 2023
-                  option(value="2022") 2022
-                  option(value="2021") 2021
-                  option(value="2020") 2020
-                  option(value="2019") 2019
-                  option(value="2018") 2018
-                  option(value="2017") 2017
-                  option(value="2016") 2016
-                  option(value="2015") 2015
-              
+                label.form-label Age Group
+                select.form-select#ageSelect
+                  option(value="") Select Age Group
+                  option(value="child") Child (0-17)
+                  option(value="adult") Adult (18-64)
+                  option(value="senior") Senior (65+)
+
               .form-group.mb-3
-                label.form-label Make
-                select.form-select#makeSelect(disabled)
-                  option(value="") Select Make
-              
+                label.form-label Medical Specialty
+                select.form-select#specialtySelect
+                  option(value="") Select Specialty
+                  option(value="primary") Primary Care
+                  option(value="cardiology") Cardiology
+                  option(value="orthopedics") Orthopedics
+                  option(value="dermatology") Dermatology
+
               .form-group.mb-3
-                label.form-label Model
-                select.form-select#modelSelect(disabled)
-                  option(value="") Select Model
-              
+                label.form-label Treatment Type
+                select.form-select#treatmentSelect
+                  option(value="") Select Treatment Type
+                  option(value="consultation") Consultation
+                  option(value="diagnostic") Diagnostic
+                  option(value="preventive") Preventive
+
               .form-group.mb-3
-                label.form-label Trim
-                select.form-select#trimSelect(disabled)
-                  option(value="") Select Trim
+                label.form-label Care Level
+                select.form-select#careLevelSelect
+                  option(value="") Select Care Level
+                  option(value="basic") Basic
+                  option(value="standard") Standard
+                  option(value="comprehensive") Comprehensive
             
             .filter-card
-              h5.filter-title Tire Type
+              h5.filter-title Care Tier
               .form-check.mb-2
-                input.form-check-input(type="checkbox" id="allSeason" checked)
-                label.form-check-label(for="allSeason") All-Season
+                input.form-check-input(type="checkbox" id="primaryCare" checked)
+                label.form-check-label(for="primaryCare") Primary Care
               .form-check.mb-2
-                input.form-check-input(type="checkbox" id="summer")
-                label.form-check-label(for="summer") Summer
+                input.form-check-input(type="checkbox" id="preventiveCare")
+                label.form-check-label(for="preventiveCare") Preventive Care
               .form-check.mb-2
-                input.form-check-input(type="checkbox" id="winter")
-                label.form-check-label(for="winter") Winter
+                input.form-check-input(type="checkbox" id="urgentCare")
+                label.form-check-label(for="urgentCare") Urgent Care
               .form-check.mb-2
-                input.form-check-input(type="checkbox" id="performance")
-                label.form-check-label(for="performance") Performance
+                input.form-check-input(type="checkbox" id="advancedDiagnostics")
+                label.form-check-label(for="advancedDiagnostics") Advanced Diagnostics
             
             .filter-card
               h5.filter-title Price Range
@@ -73,154 +76,154 @@ block content
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/004ea8/ffffff?text=All-Season+Tire" alt="All-Season Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/0066CC/ffffff?text=General+Health+Assessment" alt="General Health Assessment")
                   .tire-info
-                    h6.tire-brand Goodyear
-                    h5.tire-name Assurance All-Season
-                    p.tire-size 225/60R16
+                    h6.tire-brand Primary Care
+                    h5.tire-name General Health Assessment
+                    p.tire-size CPT 99214
                     .tire-rating
                       .stars ★★★★★
                       span.rating-text (4.8/5)
                     .tire-features
-                      span.badge.bg-primary.me-1 All-Season
-                      span.badge.bg-success 80k Mile Warranty
+                      span.badge.bg-primary.me-1 Primary Care
+                      span.badge.bg-success Comprehensive
                     .tire-price
                       span.price $120.00
                       span.price-original $140.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('goodyear-assurance', 'Goodyear Assurance All-Season', 120, '225/60R16')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('general-health', 'General Health Assessment', 120, 'CPT 99214')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
               
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/ffc107/000000?text=Performance+Tire" alt="Performance Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/00CC88/000000?text=Advanced+Diagnostic" alt="Advanced Diagnostic")
                   .tire-info
-                    h6.tire-brand Cooper
-                    h5.tire-name Pilot Sport 4
-                    p.tire-size 245/45R18
+                    h6.tire-brand Diagnostics
+                    h5.tire-name Advanced Diagnostic Panel
+                    p.tire-size CPT 80053
                     .tire-rating
                       .stars ★★★★★
                       span.rating-text (4.9/5)
                     .tire-features
-                      span.badge.bg-warning.me-1 Performance
-                      span.badge.bg-info Summer
+                      span.badge.bg-warning.me-1 Advanced Diagnostics
+                      span.badge.bg-info Comprehensive
                     .tire-price
                       span.price $180.00
                       span.price-original $200.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('michelin-pilot', 'Michelin Pilot Sport 4', 180, '245/45R18')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('advanced-diagnostic', 'Advanced Diagnostic Panel', 180, 'CPT 80053')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
               
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/28a745/ffffff?text=Winter+Tire" alt="Winter Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/28a745/ffffff?text=Urgent+Care+Visit" alt="Urgent Care Visit")
                   .tire-info
-                    h6.tire-brand Dunlop
-                    h5.tire-name Blizzak WS90
-                    p.tire-size 215/65R16
+                    h6.tire-brand Urgent Care
+                    h5.tire-name Urgent Care Visit
+                    p.tire-size CPT 99213
                     .tire-rating
                       .stars ★★★★★
                       span.rating-text (4.7/5)
                     .tire-features
-                      span.badge.bg-info.me-1 Winter
-                      span.badge.bg-success Studless
+                      span.badge.bg-info.me-1 Urgent Care
+                      span.badge.bg-success Same-Day
                     .tire-price
                       span.price $150.00
                       span.price-original $170.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('bridgestone-blizzak', 'Bridgestone Blizzak WS90', 150, '215/65R16')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('urgent-care', 'Urgent Care Visit', 150, 'CPT 99213')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
               
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/dc3545/ffffff?text=Commercial+Tire" alt="Commercial Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/dc3545/ffffff?text=Preventive+Care" alt="Preventive Care")
                   .tire-info
-                    h6.tire-brand Goodyear
-                    h5.tire-name CrossContact LX2
-                    p.tire-size 235/75R15
+                    h6.tire-brand Preventive
+                    h5.tire-name Annual Wellness Exam
+                    p.tire-size CPT 99395
                     .tire-rating
                       .stars ★★★★☆
                       span.rating-text (4.5/5)
                     .tire-features
-                      span.badge.bg-primary.me-1 All-Season
-                      span.badge.bg-secondary SUV/Truck
+                      span.badge.bg-primary.me-1 Preventive Care
+                      span.badge.bg-secondary Annual
                     .tire-price
                       span.price $160.00
                       span.price-original $180.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('continental-crosscontact', 'Continental CrossContact LX2', 160, '235/75R15')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('wellness-exam', 'Annual Wellness Exam', 160, 'CPT 99395')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
               
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/6f42c1/ffffff?text=Economy+Tire" alt="Economy Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/6f42c1/ffffff?text=Basic+Consultation" alt="Basic Consultation")
                   .tire-info
-                    h6.tire-brand Dunlop
-                    h5.tire-name AltiMAX RT43
-                    p.tire-size 205/55R16
+                    h6.tire-brand Primary Care
+                    h5.tire-name Basic Consultation
+                    p.tire-size CPT 99212
                     .tire-rating
                       .stars ★★★★☆
                       span.rating-text (4.3/5)
                     .tire-features
-                      span.badge.bg-primary.me-1 All-Season
-                      span.badge.bg-success 80k Mile Warranty
+                      span.badge.bg-primary.me-1 Primary Care
+                      span.badge.bg-success Quick Visit
                     .tire-price
                       span.price $95.00
                       span.price-original $110.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('general-altimax', 'General AltiMAX RT43', 95, '205/55R16')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('basic-consultation', 'Basic Consultation', 95, 'CPT 99212')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
               
               .col-md-6.col-lg-4.mb-4
                 .tire-card
                   .tire-image
-                    img.img-fluid(src="https://via.placeholder.com/300x200/17a2b8/ffffff?text=Luxury+Tire" alt="Luxury Tire")
+                    img.img-fluid(src="https://via.placeholder.com/300x200/17a2b8/ffffff?text=Specialist+Consultation" alt="Specialist Consultation")
                   .tire-info
-                    h6.tire-brand Cooper
-                    h5.tire-name P Zero
-                    p.tire-size 275/40R19
+                    h6.tire-brand Specialty Care
+                    h5.tire-name Specialist Consultation
+                    p.tire-size CPT 99245
                     .tire-rating
                       .stars ★★★★★
                       span.rating-text (4.9/5)
                     .tire-features
-                      span.badge.bg-warning.me-1 Performance
-                      span.badge.bg-dark Luxury
+                      span.badge.bg-warning.me-1 Advanced Diagnostics
+                      span.badge.bg-dark Expert
                     .tire-price
                       span.price $220.00
                       span.price-original $250.00
                     .tire-actions
-                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('pirelli-pzero', 'Pirelli P Zero', 220, '275/40R19')") Add to Cart
+                      button.btn.btn-primary.btn-sm.me-2(onclick="addToCart('specialist-consult', 'Specialist Consultation', 220, 'CPT 99245')") Schedule Appointment
                       button.btn.btn-outline-secondary.btn-sm View Details
 
       .row.mt-5
         .col-12
           .services-section
-            h3.text-center.mb-4 Our Tire Services
+            h3.text-center.mb-4 Our Healthcare Services
             .row
               .col-md-3.text-center.mb-4
                 .service-card
-                  i.fas.fa-tools.fa-3x.text-primary.mb-3
-                  h5 Installation
-                  p Professional tire installation with balancing and alignment check.
+                  i.fas.fa-user-md.fa-3x.text-primary.mb-3
+                  h5 Patient Intake
+                  p Comprehensive patient registration and initial consultation with care coordination.
               .col-md-3.text-center.mb-4
                 .service-card
-                  i.fas.fa-sync-alt.fa-3x.text-primary.mb-3
-                  h5 Rotation
-                  p Regular tire rotation to ensure even wear and extend tire life.
+                  i.fas.fa-heartbeat.fa-3x.text-primary.mb-3
+                  h5 Preventive Care
+                  p Regular preventive care visits to ensure ongoing health and wellness.
               .col-md-3.text-center.mb-4
                 .service-card
-                  i.fas.fa-compress-arrows-alt.fa-3x.text-primary.mb-3
-                  h5 Alignment
-                  p Wheel alignment service to improve handling and tire longevity.
+                  i.fas.fa-clipboard-list.fa-3x.text-primary.mb-3
+                  h5 Care Coordination
+                  p Integrated care coordination to manage your overall health journey.
               .col-md-3.text-center.mb-4
                 .service-card
-                  i.fas.fa-tachometer-alt.fa-3x.text-primary.mb-3
-                  h5 Pressure Check
-                  p Free tire pressure check and adjustment for optimal performance.
+                  i.fas.fa-stethoscope.fa-3x.text-primary.mb-3
+                  h5 Health Monitoring
+                  p Ongoing health monitoring and wellness tracking for optimal outcomes.
 
   style.
     .tires-page {
@@ -243,10 +246,10 @@ block content
     }
     
     .filter-title {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 15px;
-      border-bottom: 2px solid #ffc107;
+      border-bottom: 2px solid #00CC88;
       padding-bottom: 8px;
     }
     
@@ -286,7 +289,7 @@ block content
     }
     
     .tire-name {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 5px;
     }
@@ -302,7 +305,7 @@ block content
     }
     
     .stars {
-      color: #ffc107;
+      color: #00CC88;
       font-size: 1.1rem;
     }
     
@@ -323,7 +326,7 @@ block content
     .price {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .price-original {
@@ -341,7 +344,7 @@ block content
     }
     
     .service-card h5 {
-      color: #004ea8;
+      color: #0066CC;
       margin-bottom: 10px;
     }
     
@@ -370,7 +373,7 @@ block content
     }
     
     .cart-header {
-      background: #004ea8;
+      background: #0066CC;
       color: white;
       padding: 20px;
       display: flex;
@@ -392,7 +395,7 @@ block content
     
     .cart-item-info h6 {
       margin: 0;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .cart-item-info p {
@@ -403,7 +406,7 @@ block content
     
     .cart-item-price {
       font-weight: 600;
-      color: #004ea8;
+      color: #0066CC;
     }
     
     .cart-total {
@@ -432,7 +435,7 @@ block content
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #004ea8;
+      background: #0066CC;
       color: white;
       border: none;
       border-radius: 50%;
@@ -448,7 +451,7 @@ block content
       position: absolute;
       top: -5px;
       right: -5px;
-      background: #ffc107;
+      background: #00CC88;
       color: #000;
       border-radius: 50%;
       width: 25px;
@@ -468,7 +471,7 @@ block content
     }
     
     .signup-header h6 {
-      color: #004ea8;
+      color: #0066CC;
       font-weight: 600;
       margin-bottom: 8px;
     }
@@ -664,7 +667,7 @@ block content
       }
       
       // Store cart data in sessionStorage
-      sessionStorage.setItem('tireCart', JSON.stringify(cart));
+      sessionStorage.setItem('serviceCart', JSON.stringify(cart));
       
       // Check if user is authenticated
       // For now, we'll show the signup section in the cart
@@ -681,9 +684,9 @@ block content
     
     function signUpFromCart() {
       // Store current cart in sessionStorage to preserve it
-      const cartData = sessionStorage.getItem('tireCart');
+      const cartData = sessionStorage.getItem('serviceCart');
       if (cartData) {
-        sessionStorage.setItem('tireCartBackup', cartData);
+        sessionStorage.setItem('serviceCartBackup', cartData);
       }
       
       // Redirect to Auth0 signup with return URL to callback
@@ -694,9 +697,9 @@ block content
     
     function signInFromCart() {
       // Store current cart in sessionStorage to preserve it
-      const cartData = sessionStorage.getItem('tireCart');
+      const cartData = sessionStorage.getItem('serviceCart');
       if (cartData) {
-        sessionStorage.setItem('tireCartBackup', cartData);
+        sessionStorage.setItem('serviceCartBackup', cartData);
       }
       
       // Redirect to Auth0 login with return URL to callback

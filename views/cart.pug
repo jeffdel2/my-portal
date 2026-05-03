@@ -4,18 +4,18 @@ block content
     .cart
         .frame-wrapper
             .frame-3
-                h1(class="h-1") Your Tire Order
-        .text-wrapper-4 Installation & Delivery Options
+                h1(class="h-1") Your Service Cart
+        .text-wrapper-4 Appointment & Consultation Options
         .text-wrapper-5 Payment Options
         .frame-4
             .frame-3
                 .text-wrapper-6 Order Summary
             p(class="products")
-                | Tires (4x)   $480.00
+                | Services (4x)   $480.00
             p(class='products')
-                | Installation   $60.00
+                | Consultation   $60.00
             p(class='products')
-                | Tire Disposal   $20.00
+                | Medical Records   $20.00
                 img(class="line-2" alt="Line" src="/static/images/line-3.svg")
             p(class="total")
                 | Total      $560.00
@@ -23,39 +23,39 @@ block content
             .frame-6
             .frame-7
                 img(src="https://cdn.glitch.global/bbda70b5-2767-4310-aa6d-4e6be7814c7d/pencil.png?v=1719338268672")
-                .text-wrapper-2 Premium All-Season Tires (225/60R16)
+                .text-wrapper-2 Comprehensive Health Services
                 .text-wrapper-7 $120.00 each
         .group
             .overlap
                 .overlap-group-wrapper
                     .overlap-group
-                        a.account(href='/balance') Installation Date
+                        a.account(href='/balance') Appointment Date
                 p(class="p") August 10th 2024 08:00 - 17:00
-                .text-wrapper-9 Professional Installation
-                p(class="text-wrapper-10") Estimated installation date - Earliest available
+                .text-wrapper-9 Professional Consultation
+                p(class="text-wrapper-10") Estimated appointment window - Earliest available
                 .text-wrapper-11 $60
         .overlap-2
             .overlap-wrapper
                 .overlap
                     form(action='/submit-transaction', method='POST')
-                        input(type='hidden', name='type', value='Tire Purchase')
+                        input(type='hidden', name='type', value='Service Appointment')
                         input(type='hidden', name='amount', value='560.00')
                         input(type='hidden', name='transferFrom', value='Customer Account')
-                        input(type='hidden', name='transferTo', value='Global Tire Solutions')
+                        input(type='hidden', name='transferTo', value='Healthcare Services')
                         ul.payment-type
                             li
                                 input(type='radio' id="card" value="card")
-                                <label for="card">Credit or Debit Card</label> 
-                            li 
+                                <label for="card">Credit or Debit Card</label>
+                            li
                                 input(type='radio' id='paypal')
-                                | PayPal 
-                            li 
+                                | PayPal
+                            li
                                 input(type='radio' id='bank')
                                 | Bank Transfer
-                                select 
-                                    option Choose One 
-                                    option Chase Bank 
-                                    option Bank of America 
+                                select
+                                    option Choose One
+                                    option Chase Bank
+                                    option Bank of America
                                     option Wells Fargo
-                                    option Tire Credit Union 
+                                    option Insurance Payment
                         input(type='Submit', id='submit', value='Continue')

@@ -526,22 +526,7 @@ app.post('/partners/register', async (req, res) => {
 
 		const connectionId = connectionResponse.data.id;
 		console.log('Created connection with ID:', connectionId);
-
-		// Enable the connection for our client
-		console.log('Enabling connection for client:', process.env.CLIENT_ID);
-		await axios.patch(
-			`${process.env.MGMT_BASE_URL}/api/v2/connections/${connectionId}`,
-			{
-				enabled_clients: [process.env.CLIENT_ID]
-			},
-			{
-				headers: { 
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-		console.log('Successfully enabled connection for client');
+		console.log('Connection already enabled for client:', process.env.CLIENT_ID);
 
 		// Enable the connection for the organization
 		console.log('Enabling connection for organization:', organizationId);
@@ -793,10 +778,10 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 	}
 });
 
-// Tires shopping cart page
+// Services catalog page
 app.get('/tires', (req, res) => {
 	res.render('tires', {
-		title: 'Tires - Shop Tires Online',
+		title: 'Services - Browse Our Healthcare Services',
 		user: req.oidc?.user,
 		userTier: req.userTier || 'free',
 		userPermissions: req.userPermissions || []
@@ -825,7 +810,7 @@ app.get('/checkout', (req, res) => {
 	}
 	
 	res.render('checkout', {
-		title: 'Checkout - Complete Your Tire Order',
+		title: 'Checkout - Confirm Your Appointment',
 		user: req.oidc?.user,
 		userTier: req.userTier || 'free',
 		userPermissions: req.userPermissions || []

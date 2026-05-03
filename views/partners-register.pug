@@ -7,13 +7,13 @@ block content
         .row.justify-content-center
           .col-lg-8
             .register-header
-              h1.register-title Become a Goodyear Dealer
-              p.register-subtitle Join our authorized dealer network and unlock new tire business opportunities
+              h1.register-title Become a Network Provider
+              p.register-subtitle Join our provider network and unlock new healthcare business opportunities
               
               if success
                 .alert.alert-success.alert-dismissible.fade.show.mb-4
                   strong ✓ Registration Successful!
-                  | Your dealer organization has been created. You will receive an email with next steps.
+                  | Your provider organization has been created. You will receive an email with next steps.
                   button.btn-close(type="button" data-bs-dismiss="alert")
               
               if error
@@ -52,16 +52,16 @@ block content
                     
                     .col-md-6
                       .form-group.mb-3
-                        label.form-label(for="orgDomain") Dealership Domain *
+                        label.form-label(for="orgDomain") Provider Organization Domain *
                         input.form-control(
                           type="text"
                           id="orgDomain"
                           name="orgDomain"
                           required
-                          placeholder="citytires.com"
+                          placeholder="medicalgroup.com"
                           value=formData && formData.orgDomain || ''
                         )
-                        .form-text Your dealership's primary domain (without www)
+                        .form-text Your provider organization's primary domain (without www)
 
                 // Contact Information
                 .form-section
@@ -120,9 +120,9 @@ block content
                     .form-check
                       input.form-check-input(type="checkbox" id="agreeTerms" name="agreeTerms" required)
                       label.form-check-label(for="agreeTerms")
-                        | I agree to the 
-                        a(href="#" target="_blank") Dealer Agreement
-                        |  and 
+                        | I agree to the
+                        a(href="#" target="_blank") Provider Agreement
+                        |  and
                         a(href="#" target="_blank") Terms of Service
                         |  *
                   
@@ -138,21 +138,21 @@ block content
                     .form-check
                       input.form-check-input(type="checkbox" id="agreeMarketing" name="agreeMarketing")
                       label.form-check-label(for="agreeMarketing")
-                        | I agree to receive marketing communications and dealer program updates
+                        | I agree to receive marketing communications and provider program updates
 
                 // Submit Section
                 .form-section.submit-section
                   .submit-actions
                     button.btn.btn-register-primary.btn-lg(type="submit")
                       i.fas.fa-rocket.me-2
-                      | Create Dealer Organization
+                      | Create Provider Organization
                     a.btn.btn-register-outline.btn-lg(href="/partners")
                       i.fas.fa-arrow-left.me-2
-                      | Back to Dealers
+                      | Back to Providers
                   
                   .submit-note
                     p.text-muted
-                      | By submitting this form, you agree to create a new dealership in our authorized dealer network. 
+                      | By submitting this form, you agree to create a new provider organization in our network.
                       | You will receive an email confirmation and next steps within 24 hours.
 
   // Auto-dismiss alerts
