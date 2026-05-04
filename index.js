@@ -549,7 +549,7 @@ app.post('/partners/register', async (req, res) => {
 		// Send member invitation instead of creating user directly
 		const invitationData = {
 			inviter: {
-				name: "AT&T Partner Portal"
+				name: "Partner Portal"
 			},
 			invitee: {
 				email: String(contactEmail)
@@ -917,8 +917,9 @@ app.get('/partners/login', (req, res) => {
 	// Use partners-specific login with organization context
 	const authorizationParams = {
 		// Ensure audience and scope are included for access token generation
+		// Fallback to 'openid profile email' if SCOPE is not set
 		audience: process.env.AUDIENCE,
-		scope: process.env.SCOPE
+		scope: process.env.SCOPE || 'openid profile email'
 	}
 	
 	// Only add organization if provided
