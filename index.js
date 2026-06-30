@@ -1,15 +1,5 @@
-const purchases = [
-	{
-		date: new Date(),
-		description: 'Purchase from Pencils paid via Okta Bank',
-		value: 102,
-	},
-	{
-		date: new Date(),
-		description: 'Purchase from Pencils paid via Okta Bank',
-		value: 42,
-	},
-]
+// Branding Configuration
+const brandingConfig = require('./config/branding');
 
 async function updateProfileWithMFA() {
   try {
@@ -371,16 +361,8 @@ const requireTierAndFGA = (minTier, relation, objectExtractor) => {
 
 
 app.get('/', async (req, res, next) => {
-	
-  try {
-
-		res.render('landing', {
-			user: req.oidc && req.oidc.user,
-		})
-	} catch (err) {
-		console.log(err)
-		next(err)
-	}
+	// Redirect to partner portal (customer portal removed)
+	res.redirect('/partners');
 })
 
 app.get('/partners', async (req, res, next) => {
@@ -389,7 +371,8 @@ app.get('/partners', async (req, res, next) => {
 			title: 'Partner Portal',
 			user: req.oidc && req.oidc.user,
 			userTier: req.userTier,
-			userPermissions: req.userPermissions
+			userPermissions: req.userPermissions,
+			branding: brandingConfig
 		})
 	} catch (err) {
 		console.log(err)
@@ -406,7 +389,8 @@ app.get('/partners/register', (req, res) => {
 		userPermissions: req.userPermissions,
 		formData: req.session.registrationFormData || {},
 		success: req.query.success === 'true',
-		error: req.query.error
+		error: req.query.error,
+		branding: brandingConfig
 	})
 })
 
@@ -778,139 +762,9 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 	}
 });
 
-// Services catalog page
-app.get('/tires', (req, res) => {
-	res.render('tires', {
-		title: 'Services - Browse Our Healthcare Services',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
+// Customer portal routes removed - Partner portal only
 
-// Checkout page
-app.get('/checkout', (req, res) => {
-	console.log('Checkout route - User object:', req.oidc?.user);
-	console.log('Checkout route - User name:', req.oidc?.user?.name);
-	console.log('Checkout route - Is authenticated:', req.oidc?.isAuthenticated());
-	console.log('Checkout route - Query params:', req.query);
-	
-	// If user has auth code but isn't authenticated, redirect to proper callback
-	if (!req.oidc?.isAuthenticated() && req.query.code) {
-		console.log('User has auth code but not authenticated - redirecting to callback');
-		// Store returnTo in session before redirecting to callback
-		if (req.query.returnTo) {
-			req.session.returnTo = req.query.returnTo;
-		} else {
-			req.session.returnTo = '/checkout';
-		}
-		// Redirect to the proper Auth0 callback endpoint
-		const callbackUrl = `/callback?${new URLSearchParams(req.query).toString()}`;
-		return res.redirect(callbackUrl);
-	}
-	
-	res.render('checkout', {
-		title: 'Checkout - Confirm Your Appointment',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
-
-
-// Get user metadata
-app.get('/user-metadata', async (req, res) => {
-	try {
-		if (!req.oidc?.user) {
-			return res.status(401).json({ error: 'User not authenticated' });
-		}
-
-		// Get management API token
-		const token = await getManagementApiToken();
-
-		// Get user metadata
-		const response = await axios.get(
-			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		res.json(response.data.user_metadata || {});
-
-	} catch (error) {
-		console.error('Error getting user metadata:', error.response?.data || error.message);
-		res.status(500).json({ error: 'Failed to get user metadata' });
-	}
-});
-
-// Save shipping information to user metadata
-app.post('/save-shipping-info', async (req, res) => {
-	try {
-		if (!req.oidc?.user) {
-			return res.status(401).json({ error: 'User not authenticated' });
-		}
-
-		const { firstName, lastName, address, city, state, zipCode, phone, email } = req.body;
-
-		// Validate required fields
-		if (!firstName || !lastName || !address || !city || !state || !zipCode || !phone || !email) {
-			return res.status(400).json({ error: 'All shipping fields are required' });
-		}
-
-		// Get management API token
-		const token = await getManagementApiToken();
-
-		// Prepare shipping information for user_metadata
-		const shippingInfo = {
-			address,
-			city,
-			state,
-			zipCode,
-			email,
-			lastUpdated: new Date().toISOString()
-		};
-
-		// Update user metadata with standalone fields and shipping info
-		const response = await axios.patch(
-			`${process.env.MGMT_BASE_URL}/api/v2/users/${req.oidc.user.sub}`,
-			{
-				user_metadata: {
-					first_name: firstName,
-					last_name: lastName,
-					phone: phone,
-					shippingInfo: shippingInfo
-				}
-			},
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		console.log('Shipping info saved for user:', req.oidc.user.sub);
-		res.json({ success: true, message: 'Shipping information saved successfully' });
-
-	} catch (error) {
-		console.error('Error saving shipping info:', error.response?.data || error.message);
-		res.status(500).json({ error: 'Failed to save shipping information' });
-	}
-});
-
-// Order success page
-app.get('/order-success', (req, res) => {
-	res.render('order-success', {
-		title: 'Order Confirmed - Thank You!',
-		user: req.oidc?.user,
-		userTier: req.userTier || 'free',
-		userPermissions: req.userPermissions || []
-	});
-});
+// Customer shipping and order routes removed
 
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
@@ -1016,7 +870,8 @@ app.get('/partners/tokens', requiresAuth(), (req, res) => {
 			refresh_token,
 			id_token,
 			access_token,
-			userTier: req.userTier || 'unknown'
+			userTier: req.userTier || 'unknown',
+			branding: brandingConfig
 		})
 	} catch (error) {
 		console.error('Error rendering partners tokens page:', error)
@@ -1074,7 +929,8 @@ app.get('/partners/profile', requiresAuth(), async (req, res) => {
 			issuerUrl,
 			mgmtUrl,
 			appUrl,
-			updateSuccess: updated
+			updateSuccess: updated,
+			branding: brandingConfig
 		})
 	} catch (error) {
 		console.error('Error rendering partners profile page:', error)
@@ -1196,7 +1052,8 @@ app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
 			members,
 			invitations,
 			orgId,
-			orgName: organization.display_name
+			orgName: organization.display_name,
+			branding: brandingConfig
 		})
 		
 	} catch (error) {
@@ -2189,184 +2046,7 @@ app.get('/headers', async (req, res) => {
 	})
 })
 
-app.get('/cart', requiresAuth(), async (req, res) => {
-	let errorMessage
-	const error = req.query && req.query.error
-	if (error === 'access_denied') {
-		// The AS said we are not allowed to do this transaction, tell the end-user!
-		errorMessage =
-			'You are not authorized to make this transaction. Perhaps you can try with a smaller transaction amount?'
-		delete req.session.pendingTransaction
-	}
-
-	res.render('cart', {
-		user: req.oidc && req.oidc.user,
-		id_token: req.oidc && req.oidc.idToken,
-		access_token: req.oidc && req.oidc.accessToken,
-		refresh_token: req.oidc && req.oidc.refreshToken,
-		errorMessage,
-	})
-})
-
-app.get('/prepare-transaction', requiresAuth(), async (req, res) => {
-	let errorMessage
-	const error = req.query && req.query.error
-	if (error === 'access_denied') {
-		// The AS said we are not allowed to do this transaction, tell the end-user!
-		errorMessage =
-			'You are not authorized to make this transaction. Perhaps you can try with a smaller transaction amount?'
-		delete req.session.pendingTransaction
-	}
-
-	const transaction_amount = (req.query && req.query.transaction_amount) || 15
-	res.render('transaction', {
-		user: req.oidc && req.oidc.user,
-		id_token: req.oidc && req.oidc.idToken,
-		access_token: req.oidc && req.oidc.accessToken,
-		refresh_token: req.oidc && req.oidc.refreshToken,
-		transaction_amount,
-		errorMessage,
-	})
-})
-
-app.get('/resume-transaction', requiresAuth(), async (req, res, next) => {
-	const tokenSet = await client.callback(
-		BANK_REDIRECT_URI,
-		{ code: req.query.code },
-		{ nonce: '132123' }
-	)
-	console.log(`Token set: ${tokenSet}`)
-
-	if (req.session.pendingTransaction) {
-		console.log(
-			'Processing pending transaction',
-			req.session.pendingTransaction
-		)
-		try {
-			const { type, amount, from, to } = req.session.pendingTransaction
-			// TODO: handle the error case here...
-			submitTransaction({ type, amount, from, to }, req)
-			res.redirect('/transaction-complete')
-		} catch (err) {
-			console.log('refused to connect')
-			console.log(err.stack)
-			return next(err)
-		}
-	} else {
-		const transaction_amount = (req.query && req.query.amount) || 15
-		res.render('transaction', {
-			user: req.oidc && req.oidc.user,
-			id_token: req.oidc && req.oidc.idToken,
-			access_token: req.oidc && req.oidc.accessToken,
-			refresh_token: req.oidc && req.oidc.refreshToken,
-			transaction_amount,
-		})
-	}
-})
-
-app.get('/transaction-complete', requiresAuth(), async (req, res) => {
-	res.render('transaction-complete', {
-		user: req.oidc && req.oidc.user,
-	})
-})
-
-const submitTransaction = (payload, req) => {
-	const type = payload.type
-	const transferFrom = payload.from
-	const transferTo = payload.to
-	const amount = payload.amount
-
-	purchases.push({
-		date: new Date(),
-		description: `${type} from ${transferTo} paid via ${transferFrom}`,
-		value: amount,
-	})
-
-	delete req.session.pendingTransaction
-}
-
-app.post('/submit-transaction', requiresAuth(), async (req, res, next) => {
-	const type = req.body.type
-	const amount = Number(req.body.amount)
-	const transferFrom = req.body.transferFrom
-	const transferTo = req.body.transferTo
-	try {
-		if (responseTypesWithToken.includes(RESPONSE_TYPE)) {
-			const authorization_details = [
-				{
-					type: type,
-					amount: amount,
-					from: transferFrom,
-					to: transferTo,
-				},
-			]
-
-			req.session.pendingTransaction = {
-				type: type,
-				amount: amount,
-				from: transferFrom,
-				to: transferTo,
-			}
-
-			const authorization_request = {
-				audience: BANK_AUDIENCE,
-				scope: `openid profile ${BANK_AUD_SCOPES}`,
-				nonce: '132123',
-				response_type: responseType,
-				authorization_details: JSON.stringify(authorization_details),
-			}
-			console.log('authZ', authorization_request)
-
-			const response = await client.pushedAuthorizationRequest(
-				authorization_request
-			)
-			console.log('PAR response', response)
-
-			res.redirect(
-				`${BANK_ISSUER}/authorize?client_id=${process.env.BANK_CLIENT_ID}&request_uri=${response.request_uri}`
-			)
-
-			return
-		} else {
-			next(
-				createError(
-					403,
-					'Access token required to complete this operation. Please, use an OIDC flow that issues an access_token'
-				)
-			)
-		}
-	} catch (err) {
-		next(err)
-	}
-})
-
-app.get('/balance', requiresAuth(), requireTier('subscriber'), async (req, res, next) => {
-	try {
-		if (responseTypesWithToken.includes(RESPONSE_TYPE)) {
-			let totalPurchases = purchases.reduce(
-				(accum, purchase) => accum + purchase.value,
-				0
-			)
-
-			res.render('balance', {
-				user: req.oidc && req.oidc.user,
-				balance: totalPurchases,
-				purchases: purchases,
-				userTier: req.userTier,
-				userPermissions: req.userPermissions
-			})
-		} else {
-			next(
-				createError(
-					403,
-					'Access token required to complete this operation. Please, use an OIDC flow that issues an access_token'
-				)
-			)
-		}
-	} catch (err) {
-		next(err)
-	}
-})
+// Customer transaction routes removed (cart, balance, submit-transaction, etc.)
 
 app.get('/api', (request, response) => {
 	response.status(200).end('OK')

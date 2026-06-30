@@ -1,6 +1,7 @@
 extends layout
 
 block content
+  - const config = branding || {}
   .partners-page
     // Professional Hero Section
     .partners-hero-section
@@ -9,13 +10,12 @@ block content
           .col-lg-6
             .partners-hero-content
               .partners-badge
-                span.badge-text Network Provider Program
+                span.badge-text Partner Program
               h1.partners-main-title
-                | Grow Your Practice with
-                span.highlight Meridian Network Partnership
+                | Grow Your Business with
+                span.highlight= ' ' + (config.companyName || 'Partner Portal')
               p.partners-hero-description
-                | Join our exclusive provider network and unlock new revenue opportunities,
-                | access premium healthcare services, and grow your practice with the leading healthcare network.
+                = config.description || 'Empowering business partnerships through innovative technology and dedicated support. Join thousands of partners who trust our platform to grow their business.'
               .partners-cta-buttons
                 if user && userTier === 'premium'
                   a.btn.btn-partners-primary.btn-lg(href='/partners/admin')
@@ -40,14 +40,14 @@ block content
                     | Become a Partner
               .partners-trust-indicators
                 .trust-item
-                  span.trust-number 2,500+
-                  span.trust-label Network Providers
+                  span.trust-number= (config.statistics && config.statistics.networkPartners) || '5,000+'
+                  span.trust-label Network Partners
                 .trust-item
-                  span.trust-number 120+
+                  span.trust-number= (config.statistics && config.statistics.yearsInBusiness) || '25+'
                   span.trust-label Years of Excellence
                 .trust-item
-                  span.trust-number #1
-                  span.trust-label Healthcare Network
+                  span.trust-number= (config.statistics && config.statistics.marketPosition) || '#1'
+                  span.trust-label= (config.statistics && config.statistics.marketPosition) ? 'Platform' : 'Platform'
           .col-lg-6
             .partners-hero-visual
               .partners-visual-card
@@ -58,11 +58,11 @@ block content
                 .visual-content
                   .metric-row
                     .metric
-                      .metric-value $185K
-                      .metric-label Monthly Revenue
+                      .metric-value= (config.sampleMetrics && config.sampleMetrics.revenue) || '$185K'
+                      .metric-label= (config.sampleMetrics && config.sampleMetrics.revenueLabel) || 'Monthly Revenue'
                     .metric
-                      .metric-value 1,250
-                      .metric-label Patient Referrals
+                      .metric-value= (config.sampleMetrics && config.sampleMetrics.leads) || '1,250'
+                      .metric-label= (config.sampleMetrics && config.sampleMetrics.leadsLabel) || 'Active Leads'
                   .chart-placeholder
                     .chart-bar(style="height: 60%")
                     .chart-bar(style="height: 80%")
@@ -99,24 +99,33 @@ block content
     .partners-tiers-section
       .container
         .section-header
-          h2.section-title Provider Partnership Tiers
-          p.section-subtitle Choose the provider level that fits your practice needs
+          h2.section-title Partnership Tiers
+          p.section-subtitle Choose the partnership level that fits your business needs
         .row
+          - const tiers = config.partnerTiers || {}
+          - const bronze = tiers.bronze || {}
+          - const silver = tiers.silver || {}
+          - const gold = tiers.gold || {}
+
           .col-lg-4
             .tier-card.tier-bronze
               .tier-header
                 .tier-icon
-                  i.fas.fa-stethoscope
-                h3.tier-name Credentialed Provider
+                  i.fas.fa-award
+                h3.tier-name= bronze.name || 'Standard Partner'
                 .tier-price
-                  span.price Free
+                  span.price= bronze.price || 'Free'
                   span.period to join
               .tier-features
                 ul
-                  li Access to full service directory
-                  li Provider portal access
-                  li Standard medical education materials
-                  li Marketing support
+                  if bronze.features
+                    each feature in bronze.features
+                      li= feature
+                  else
+                    li Access to partner portal
+                    li Basic marketplace listing
+                    li Monthly performance reports
+                    li Email support
               .tier-cta
                 a.btn.btn-tier(href='/partners/register?tier=bronze') Get Started
           .col-lg-4
@@ -124,18 +133,21 @@ block content
               .tier-badge Most Popular
               .tier-header
                 .tier-icon
-                  i.fas.fa-award
-                h3.tier-name Preferred Provider
+                  i.fas.fa-award-fill
+                h3.tier-name= silver.name || 'Premium Partner'
                 .tier-price
-                  span.price $499
+                  span.price= silver.price || '$499'
                   span.period /month
               .tier-features
                 ul
-                  li All Credentialed features
-                  li Priority service access
-                  li Advanced medical education programs
-                  li Co-branded marketing
-                  li Volume discounts (10%)
+                  if silver.features
+                    each feature in silver.features
+                      li= feature
+                  else
+                    li All Standard features
+                    li Featured marketplace placement
+                    li Priority lead distribution
+                    li Priority support
               .tier-cta
                 a.btn.btn-tier.btn-tier-primary(href='/partners/register?tier=silver') Upgrade Now
           .col-lg-4
@@ -143,17 +155,20 @@ block content
               .tier-header
                 .tier-icon
                   i.fas.fa-crown
-                h3.tier-name Elite Specialist
+                h3.tier-name= gold.name || 'Elite Partner'
                 .tier-price
-                  span.price Custom
+                  span.price= gold.price || 'Custom'
                   span.period pricing
               .tier-features
                 ul
-                  li All Preferred features
-                  li Dedicated account manager
-                  li Exclusive service launches
-                  li Higher volume discounts (15%)
-                  li Regional territory rights
+                  if gold.features
+                    each feature in gold.features
+                      li= feature
+                  else
+                    li All Premium features
+                    li Dedicated account manager
+                    li Exclusive opportunities
+                    li Custom API integrations
               .tier-cta
                 a.btn.btn-tier(href='/partners/register?tier=gold') Contact Sales
 
@@ -161,101 +176,139 @@ block content
     .partners-success-section
       .container
         .section-header
-          h2.section-title Provider Success Stories
-          p.section-subtitle See how our providers are growing their practices
+          h2.section-title Partner Success Stories
+          p.section-subtitle See how our partners are growing their businesses
         .row
-          .col-lg-4
-            .success-card
-              .success-logo
-                img(src='/static/images/partner-logo-1.png', alt='Medical Group One', onerror="this.style.display='none'")
-                .fallback-logo MG
-              .success-content
-                h4 Medical Group One
-                p.success-quote "Becoming a network provider increased our revenue by 250% in the first year."
-                .success-metrics
-                  .metric
-                    span.metric-value 250%
-                    span.metric-label Revenue Growth
-                  .metric
-                    span.metric-value $3.2M
-                    span.metric-label Annual Revenue
-          .col-lg-4
-            .success-card
-              .success-logo
-                img(src='/static/images/partner-logo-2.png', alt='Healthcare Partners Pro', onerror="this.style.display='none'")
-                .fallback-logo HP
-              .success-content
-                h4 Healthcare Partners Pro
-                p.success-quote "The provider support and training helped us expand to 8 locations in 3 years."
-                .success-metrics
-                  .metric
-                    span.metric-value 8
-                    span.metric-label Locations
-                  .metric
-                    span.metric-value 180%
-                    span.metric-label Patient Growth
-          .col-lg-4
-            .success-card
-              .success-logo
-                img(src='/static/images/partner-logo-3.png', alt='Specialty Care Network', onerror="this.style.display='none'")
-                .fallback-logo SC
-              .success-content
-                h4 Specialty Care Network
-                p.success-quote "Meridian's premium service selection and marketing support transformed our business."
-                .success-metrics
-                  .metric
-                    span.metric-value 4x
-                    span.metric-label Revenue Increase
-                  .metric
-                    span.metric-value 98%
-                    span.metric-label Patient Satisfaction
+          - const stories = config.successStories || []
+          if stories.length > 0
+            each story, index in stories.slice(0, 3)
+              .col-lg-4
+                .success-card
+                  .success-logo
+                    img(src=story.logo, alt=story.company, onerror="this.style.display='none'")
+                    .fallback-logo= story.company.substring(0, 2).toUpperCase()
+                  .success-content
+                    h4= story.company
+                    .success-tier
+                      span.badge.bg-primary= story.tier
+                    p.success-quote= story.testimonial
+                    .success-metrics
+                      if story.metrics
+                        .metric
+                          span.metric-value= story.metrics.revenue || story.metrics.growth
+                          span.metric-label Revenue Growth
+                        .metric
+                          span.metric-value= story.metrics.leads
+                          span.metric-label Active Leads
+                    if story.contact
+                      .success-contact
+                        strong= story.contact.name
+                        br
+                        span= story.contact.title
+          else
+            .col-lg-4
+              .success-card
+                .success-logo
+                  img(src='/static/images/partner-logo-1.png', alt='TechSolutions Inc', onerror="this.style.display='none'")
+                  .fallback-logo TS
+                .success-content
+                  h4 TechSolutions Inc
+                  p.success-quote "Partnering with this platform has transformed our business."
+                  .success-metrics
+                    .metric
+                      span.metric-value +300%
+                      span.metric-label Growth
+                    .metric
+                      span.metric-value $2.4M
+                      span.metric-label Revenue
+            .col-lg-4
+              .success-card
+                .success-logo
+                  img(src='/static/images/partner-logo-2.png', alt='Global Services', onerror="this.style.display='none'")
+                  .fallback-logo GS
+                .success-content
+                  h4 Global Services Group
+                  p.success-quote "The partner portal's tools have been exceptional."
+                  .success-metrics
+                    .metric
+                      span.metric-value +175%
+                      span.metric-label Growth
+                    .metric
+                      span.metric-value $850K
+                      span.metric-label Revenue
+            .col-lg-4
+              .success-card
+                .success-logo
+                  img(src='/static/images/partner-logo-3.png', alt='Enterprise Solutions', onerror="this.style.display='none'")
+                  .fallback-logo ES
+                .success-content
+                  h4 Enterprise Solutions Co
+                  p.success-quote "Outstanding platform with incredible support."
+                  .success-metrics
+                    .metric
+                      span.metric-value +240%
+                      span.metric-label Growth
+                    .metric
+                      span.metric-value $1.8M
+                      span.metric-label Revenue
 
     // Resources Section
     .partners-resources-section
       .container
         .section-header
-          h2.section-title Provider Resources
-          p.section-subtitle Everything you need to succeed as a network provider
+          h2.section-title Partner Resources
+          p.section-subtitle Everything you need to succeed as a partner
         .row
-          .col-lg-3.col-md-6
-            .resource-card
-              .resource-icon
-                i.fas.fa-book
-              h4.resource-title Service Directory
-              p.resource-description Complete service specifications and clinical guides
-              a.resource-link(href='#') View Directory →
-          .col-lg-3.col-md-6
-            .resource-card
-              .resource-icon
-                i.fas.fa-graduation-cap
-              h4.resource-title Medical Education
-              p.resource-description Clinical practice and healthcare certification programs
-              a.resource-link(href='#') Start Learning →
-          .col-lg-3.col-md-6
-            .resource-card
-              .resource-icon
-                i.fas.fa-bullhorn
-              h4.resource-title Marketing
-              p.resource-description Co-branded materials and promotional campaigns
-              a.resource-link(href='#') Get Materials →
-          .col-lg-3.col-md-6
-            .resource-card
-              .resource-icon
-                i.fas.fa-users
-              h4.resource-title Provider Network
-              p.resource-description Connect with other providers and share best practices
-              a.resource-link(href='#') Join Network →
+          - const resources = config.resources || []
+          if resources.length > 0
+            each resource in resources
+              .col-lg-3.col-md-6
+                .resource-card
+                  .resource-icon
+                    i(class='fas ' + (resource.icon || 'fa-book'))
+                  h4.resource-title= resource.title
+                  p.resource-description= resource.description
+                  a.resource-link(href='#') Learn More →
+          else
+            .col-lg-3.col-md-6
+              .resource-card
+                .resource-icon
+                  i.fas.fa-book
+                h4.resource-title Partner Directory
+                p.resource-description Browse our complete network of partners
+                a.resource-link(href='#') View Directory →
+            .col-lg-3.col-md-6
+              .resource-card
+                .resource-icon
+                  i.fas.fa-graduation-cap
+                h4.resource-title Training Programs
+                p.resource-description Access comprehensive training materials
+                a.resource-link(href='#') Start Learning →
+            .col-lg-3.col-md-6
+              .resource-card
+                .resource-icon
+                  i.fas.fa-bullhorn
+                h4.resource-title Marketing Support
+                p.resource-description Leverage co-marketing opportunities
+                a.resource-link(href='#') Get Materials →
+            .col-lg-3.col-md-6
+              .resource-card
+                .resource-icon
+                  i.fas.fa-users
+                h4.resource-title Partner Network
+                p.resource-description Connect with other partners
+                a.resource-link(href='#') Join Network →
 
     // CTA Section
     .partners-cta-section
       .container
         .cta-content
-          h2.cta-title Ready to Become a Network Provider?
-          p.cta-description Join thousands of successful providers and start growing your practice today.
+          h2.cta-title Ready to Join Our Partner Network?
+          p.cta-description Join thousands of successful partners and start growing your business today.
           .cta-buttons
             a.btn.btn-cta-primary.btn-lg(href='/partners/register')
               i.fas.fa-rocket.me-2
-              | Become a Provider
+              | Become a Partner
             a.btn.btn-cta-outline.btn-lg(href='/partners/contact')
               i.fas.fa-phone.me-2
               | Contact Sales
@@ -265,14 +318,14 @@ block content
       .footer-container
         .footer-content
           .footer-section
-            h4.footer-title Provider Resources
+            h4.footer-title Partner Resources
             ul.footer-links
-              li: a(href='#') Provider Portal
-              li: a(href='#') Service Directory
-              li: a(href='#') Medical Education
-              li: a(href='#') Support Center
+              li: a(href='#') Partner Portal
               li: a(href='#') Partner Directory
-          
+              li: a(href='#') Training Programs
+              li: a(href='#') Support Center
+              li: a(href='#') Partner Success
+
           .footer-section
             h4.footer-title Programs
             ul.footer-links
@@ -281,7 +334,7 @@ block content
               li: a(href='#') Solution Partners
               li: a(href='#') Integration Partners
               li: a(href='#') Referral Program
-          
+
           .footer-section
             h4.footer-title Support
             ul.footer-links
@@ -290,7 +343,7 @@ block content
               li: a(href='#') Account Management
               li: a(href='#') Billing Support
               li: a(href='#') Partner Success
-          
+
           .footer-section
             h4.footer-title Legal
             ul.footer-links
@@ -299,7 +352,7 @@ block content
               li: a(href='#') Privacy Policy
               li: a(href='#') Compliance
               li: a(href='#') Legal Notices
-          
+
           .footer-section
             h4.footer-title Connect
             ul.footer-links
@@ -308,10 +361,10 @@ block content
               li: a(href='#') Community
               li: a(href='#') Partner Blog
               li: a(href='#') Contact Us
-        
+
         .footer-bottom
           .footer-bottom-content
-            p.footer-copyright © 2024 Partner Portal. All rights reserved.
+            p.footer-copyright= '© 2024 ' + (config.companyName || 'Partner Portal') + '. All rights reserved.'
             .footer-bottom-links
               a(href='#') Privacy
               a(href='#') Terms

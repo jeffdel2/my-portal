@@ -3,7 +3,7 @@ html
     head
         meta(charset='UTF-8')
         meta(name='viewport' content='width=device-width, initial-scale=1.0')
-        title= title || 'Meridian Health Partners | Medical Services'
+        title= title || 'Partner Portal | B2B Vendor Management'
         link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
         link(rel='stylesheet' href='/static/stylesheets/style_new.css')
         link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css")
@@ -92,52 +92,30 @@ html
                         //-    <i class="material-symbols-outlined" fontSize="large">shopping_cart</i>
                         if user
                             li
-                              a.header(href=title === 'Partner Portal' ? '/partners/profile' : '/profile')=user.name
-                            if title === 'Partner Portal'
-                              li
-                                a.header(href='/partners') Home
-                              li
-                                a.header(href='/partners/dashboard') Dashboard
-                              li
-                                a.header(href='/partners/tokens') Tokens
-                              li
-                                a.header(href='/partners/resources') Resources
-                              li
-                                a.header(href='/partners/support') Support
-                            else
-                              li
-                                a.header(href='/tires') Tires
-                              li
-                                a.header(href='/tokens') Tokens
-                              li
-                                a.header(href='https://saml-sample.glitch.me/profile') Services
-                              //-if userTier === 'free'
-                                li
-                                  a.header.upgrade-btn(href='/upgrade') Upgrade
+                              a.header(href='/partners/profile')=user.name
+                            li
+                              a.header(href='/partners') Home
+                            li
+                              a.header(href='/partners/dashboard') Dashboard
+                            li
+                              a.header(href='/partners/tokens') Tokens
+                            li
+                              a.header(href='/partners/resources') Resources
+                            li
+                              a.header(href='/partners/support') Support
                             li
                               button.btn.btn-primary(onclick="window.location.href='/logout'") Logout
                         else
-                            if title === 'Partner Portal'
-                              li
-                                a.header(href='/partners') Home
-                              li 
-                                a.header(href='/partners/resources') Resources
-                              li
-                                a.header(href='/partners/support') Support                     
-                              li 
-                                a.header(href='/partners/register') Become&nbspa&nbspPartner
-                            else
-                              li
-                                a.header(href='/tires') Services
-                              li
-                                a.header(href='/') Resources
-                              li
-                                a.header(href='/') Learn                     
-                            li 
-                            if title === 'Partner Portal'
-                              button.btn.btn-primary(onclick="window.location.href='/partners/login'") Partner&nbspLogin
-                            else
-                              button.btn.btn-primary(onclick="window.location.href='/login'") Customer&nbspLogin 
+                            li
+                              a.header(href='/partners') Home
+                            li
+                              a.header(href='/partners/resources') Resources
+                            li
+                              a.header(href='/partners/support') Support
+                            li
+                              a.header(href='/partners/register') Become&nbspa&nbspPartner
+                            li
+                              button.btn.btn-primary(onclick="window.location.href='/partners/login'") Partner&nbspLogin 
                             //-li
                             //-button.openbtn(type="button", id="loginCoBtn", onclick="openSlideout()") Login
 
