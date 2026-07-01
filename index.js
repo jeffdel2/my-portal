@@ -43,6 +43,38 @@ console.log("MGMT ID", process.env.MGMT_CLIENT_ID)
   }
 }
 
+// Renders a JWT payload object as syntax-highlighted, timestamp-annotated HTML
+// for display on the tokens page (views/tokens.pug).
+function syntaxHighlightTokenPayload(payload) {
+	const TIMESTAMP_KEYS = ['iat', 'exp', 'nbf', 'auth_time']
+
+	const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+	const formatEpoch = (sec) => new Date(sec * 1000).toLocaleString('en-US')
+
+	const json = escapeHtml(JSON.stringify(payload, null, 2))
+	let html = json.replace(
+		/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+		(match) => {
+			let cls = 'json-number'
+			if (/^"/.test(match)) {
+				cls = /:$/.test(match) ? 'json-key' : 'json-string'
+			} else if (/true|false/.test(match)) {
+				cls = 'json-boolean'
+			} else if (/null/.test(match)) {
+				cls = 'json-null'
+			}
+			return `<span class="${cls}">${match}</span>`
+		}
+	)
+
+	TIMESTAMP_KEYS.forEach((key) => {
+		const re = new RegExp(`(<span class="json-key">"${key}":</span> <span class="json-number">)(-?\\d+)(</span>)`, 'g')
+		html = html.replace(re, (full, pre, num, post) => `${pre}${num}${post} <span class="json-date-hint">(${formatEpoch(parseInt(num, 10))})</span>`)
+	})
+
+	return html
+}
+
 const PORT = process.env.PORT || 3000
 
 const express = require('express')
@@ -766,6 +798,16 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 
 // Customer shipping and order routes removed
 
+// Legacy /login route - redirects to /partners/login to support Auth0 invitation emails
+app.get('/login', (req, res) => {
+	// Auth0 invitation emails use /login URL, so redirect to /partners/login with all params
+	const queryString = new URLSearchParams(req.query).toString();
+	const redirectUrl = `/partners/login${queryString ? '?' + queryString : ''}`;
+	console.log('Legacy /login route - redirecting to:', redirectUrl);
+	console.log('Query params:', req.query);
+	res.redirect(redirectUrl);
+});
+
 // Partners-specific login route that redirects back to /partners
 app.get('/partners/login', (req, res) => {
 	// Use partners-specific login with organization context
@@ -871,7 +913,8 @@ app.get('/partners/tokens', requiresAuth(), (req, res) => {
 			id_token,
 			access_token,
 			userTier: req.userTier || 'unknown',
-			branding: brandingConfig
+			branding: brandingConfig,
+			syntaxHighlight: syntaxHighlightTokenPayload,
 		})
 	} catch (error) {
 		console.error('Error rendering partners tokens page:', error)
@@ -947,16 +990,25 @@ app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
 	try {
 		const user = req.oidc.user
 		const userTier = req.userTier || 'unknown'
-		
+
+		// Only organization administrators can view the org dashboard
+		if (!req.userPermissions || !req.userPermissions.includes('org:admin')) {
+			return res.status(403).render('error', {
+				title: 'Partner Portal - Error',
+				message: 'Only organization administrators can access this page.',
+				error: 'Access denied'
+			})
+		}
+
 		// Extract organization information from the user's ID token
 		const orgId = req.oidc.idTokenClaims?.org_id
 		const orgName = req.oidc.idTokenClaims?.org_name
-		
+
 		console.log('Dashboard - User org info:', { orgId, orgName, userId: user.sub })
 		console.log('Dashboard - User access token claims:', req.oidc.accessTokenClaims)
 		console.log('Dashboard - User ID token claims:', req.oidc.idTokenClaims)
 		console.log('Dashboard - User tier from middleware:', req.userTier)
-		
+
 		if (!orgId) {
 			return res.status(400).render('error', {
 				title: 'Partner Portal - Error',
@@ -1069,9 +1121,17 @@ app.get('/partners/dashboard', requiresAuth(), async (req, res) => {
 // Handle user invitation from dashboard
 app.post('/partners/dashboard/invite', requiresAuth(), async (req, res) => {
 	try {
+		// Only organization administrators can invite users (and choose their role)
+		if (!req.userPermissions || !req.userPermissions.includes('org:admin')) {
+			return res.status(403).json({
+				success: false,
+				error: 'Only organization administrators can invite users'
+			})
+		}
+
 		const { email, role } = req.body
 		const user = req.oidc.user
-		
+
 		// Extract organization information from the user's ID token
 		const orgId = req.oidc.idTokenClaims?.org_id
 		const orgName = req.oidc.idTokenClaims?.org_name
@@ -1650,6 +1710,7 @@ app.get('/tokens', requiresAuth(), async (req, res) => {
 		refresh_token: req.oidc && req.oidc.refreshToken,
 		id_token_payload: idTokenPayload,
 		access_token_payload: accessTokenPayload,
+		syntaxHighlight: syntaxHighlightTokenPayload,
 	})
 })
 

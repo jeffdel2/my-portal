@@ -23,18 +23,18 @@ block content
                     | Admin Dashboard
                   a.btn.btn-partners-outline.btn-lg(href='/partners/login')
                     i.fas.fa-sign-in-alt.me-2
-                    | Partner Login
+                    | Login
                 else if user
                   a.btn.btn-partners-primary.btn-lg(href='/partners/login')
                     i.fas.fa-sign-in-alt.me-2
-                    | Partner Login
+                    | Login
                   a.btn.btn-partners-outline.btn-lg(href='/partners/dashboard')
                     i.fas.fa-tachometer-alt.me-2
                     | My Dashboard
                 else
                   a.btn.btn-partners-primary.btn-lg(href='/partners/login')
                     i.fas.fa-sign-in-alt.me-2
-                    | Partner Login
+                    | Login
                   a.btn.btn-partners-outline.btn-lg(href='/partners/register')
                     i.fas.fa-handshake.me-2
                     | Become a Partner
@@ -111,7 +111,7 @@ block content
             .tier-card.tier-bronze
               .tier-header
                 .tier-icon
-                  i.fas.fa-award
+                  i(class='fas ' + (bronze.icon || 'fa-award'))
                 h3.tier-name= bronze.name || 'Standard Partner'
                 .tier-price
                   span.price= bronze.price || 'Free'
@@ -130,10 +130,10 @@ block content
                 a.btn.btn-tier(href='/partners/register?tier=bronze') Get Started
           .col-lg-4
             .tier-card.tier-silver.featured
-              .tier-badge Most Popular
+              .tier-badge(class=silver.badge) Most Popular
               .tier-header
                 .tier-icon
-                  i.fas.fa-award-fill
+                  i(class='fas ' + (silver.icon || 'fa-medal'))
                 h3.tier-name= silver.name || 'Premium Partner'
                 .tier-price
                   span.price= silver.price || '$499'
@@ -154,7 +154,7 @@ block content
             .tier-card.tier-gold
               .tier-header
                 .tier-icon
-                  i.fas.fa-crown
+                  i(class='fas ' + (gold.icon || 'fa-crown'))
                 h3.tier-name= gold.name || 'Elite Partner'
                 .tier-price
                   span.price= gold.price || 'Custom'
@@ -185,7 +185,6 @@ block content
               .col-lg-4
                 .success-card
                   .success-logo
-                    img(src=story.logo, alt=story.company, onerror="this.style.display='none'")
                     .fallback-logo= story.company.substring(0, 2).toUpperCase()
                   .success-content
                     h4= story.company
@@ -209,7 +208,6 @@ block content
             .col-lg-4
               .success-card
                 .success-logo
-                  img(src='/static/images/partner-logo-1.png', alt='TechSolutions Inc', onerror="this.style.display='none'")
                   .fallback-logo TS
                 .success-content
                   h4 TechSolutions Inc
@@ -224,7 +222,6 @@ block content
             .col-lg-4
               .success-card
                 .success-logo
-                  img(src='/static/images/partner-logo-2.png', alt='Global Services', onerror="this.style.display='none'")
                   .fallback-logo GS
                 .success-content
                   h4 Global Services Group
@@ -239,7 +236,6 @@ block content
             .col-lg-4
               .success-card
                 .success-logo
-                  img(src='/static/images/partner-logo-3.png', alt='Enterprise Solutions', onerror="this.style.display='none'")
                   .fallback-logo ES
                 .success-content
                   h4 Enterprise Solutions Co
@@ -317,54 +313,17 @@ block content
     footer.partners-footer
       .footer-container
         .footer-content
-          .footer-section
-            h4.footer-title Partner Resources
-            ul.footer-links
-              li: a(href='#') Partner Portal
-              li: a(href='#') Partner Directory
-              li: a(href='#') Training Programs
-              li: a(href='#') Support Center
-              li: a(href='#') Partner Success
-
-          .footer-section
-            h4.footer-title Programs
-            ul.footer-links
-              li: a(href='#') Technology Partners
-              li: a(href='#') Channel Partners
-              li: a(href='#') Solution Partners
-              li: a(href='#') Integration Partners
-              li: a(href='#') Referral Program
-
-          .footer-section
-            h4.footer-title Support
-            ul.footer-links
-              li: a(href='#') Partner Support
-              li: a(href='#') Technical Support
-              li: a(href='#') Account Management
-              li: a(href='#') Billing Support
-              li: a(href='#') Partner Success
-
-          .footer-section
-            h4.footer-title Legal
-            ul.footer-links
-              li: a(href='#') Partner Agreement
-              li: a(href='#') Terms of Service
-              li: a(href='#') Privacy Policy
-              li: a(href='#') Compliance
-              li: a(href='#') Legal Notices
-
-          .footer-section
-            h4.footer-title Connect
-            ul.footer-links
-              li: a(href='#') Partner Events
-              li: a(href='#') Newsletter
-              li: a(href='#') Community
-              li: a(href='#') Partner Blog
-              li: a(href='#') Contact Us
+          - const footerSections = (config.footer && config.footer.sections) || {}
+          each section in footerSections
+            .footer-section
+              h4.footer-title= section.title
+              ul.footer-links
+                each link in section.links
+                  li: a(href=link.url)= link.text
 
         .footer-bottom
           .footer-bottom-content
-            p.footer-copyright= '© 2024 ' + (config.companyName || 'Partner Portal') + '. All rights reserved.'
+            p.footer-copyright= '© ' + new Date().getFullYear() + ' ' + ((config.footer && config.footer.copyright) || 'Partner Portal. All rights reserved.')
             .footer-bottom-links
               a(href='#') Privacy
               a(href='#') Terms

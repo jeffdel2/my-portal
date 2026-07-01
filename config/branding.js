@@ -32,7 +32,7 @@ module.exports = {
         'Standard commission rates',
         'Quarterly business reviews'
       ],
-      icon: 'bi-award',
+      icon: 'fa-award',
       badge: 'text-bg-secondary'
     },
     silver: {
@@ -48,7 +48,7 @@ module.exports = {
         'Co-marketing opportunities',
         'Monthly business reviews'
       ],
-      icon: 'bi-award-fill',
+      icon: 'fa-medal',
       badge: 'text-bg-primary',
       recommended: true
     },
@@ -67,7 +67,7 @@ module.exports = {
         'White-label opportunities',
         'Weekly strategic reviews'
       ],
-      icon: 'bi-trophy-fill',
+      icon: 'fa-crown',
       badge: 'text-bg-warning'
     }
   },
@@ -145,22 +145,22 @@ module.exports = {
   resources: [
     {
       title: 'Partner Directory',
-      icon: 'bi-building',
+      icon: 'fa-address-book',
       description: 'Browse our complete network of partners, explore partnership opportunities, and connect with businesses in your industry.'
     },
     {
       title: 'Training Programs',
-      icon: 'bi-mortarboard',
+      icon: 'fa-graduation-cap',
       description: 'Access comprehensive training materials, webinars, and certification programs to maximize your partnership success.'
     },
     {
       title: 'Marketing Support',
-      icon: 'bi-megaphone',
+      icon: 'fa-bullhorn',
       description: 'Leverage co-marketing opportunities, promotional materials, and marketing resources to grow your business presence.'
     },
     {
       title: 'Partner Network',
-      icon: 'bi-diagram-3',
+      icon: 'fa-users',
       description: 'Connect with other partners, share best practices, and collaborate on joint opportunities through our partner community.'
     }
   ],
@@ -203,7 +203,7 @@ module.exports = {
         links: [
           { text: 'Partner Portal', url: '/partners' },
           { text: 'Become a Partner', url: '/partners/register' },
-          { text: 'Partner Login', url: '/partners/login' },
+          { text: 'Login', url: '/partners/login' },
           { text: 'Support Center', url: '/partners/support' }
         ]
       },

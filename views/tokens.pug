@@ -14,40 +14,38 @@ mixin token(token, type)
         | Inspect
 
 mixin tokenPayload(payload, title, token)
-  if payload
-    .token-section
-      .token-header
-        h3= title
+  .token-section
+    .token-header
+      h3= title
+      .token-actions
+        if payload
+          button.copy-btn(type="button", title="Copy JSON payload", onclick=`copyPayload(this, ${JSON.stringify(JSON.stringify(payload, null, 2))})`)
+            img(height="16px", src="/static/images/clipboard_indigo.png", alt="")
+            span Copy
         if token
           a.jwt-link(target='_blank', href=`https://jwt.io?token=${token}`)
-            img(height="20px", src="/static/images/jwt.svg", alt="Inspect on JWT.io")
-            span Inspect
+            img(height="16px", src="/static/images/jwt.svg", alt="")
+            span Inspect on JWT.io
+    if payload
       .token-payload
-        pre.json-display= JSON.stringify(payload, null, 2)
-  else
-    .token-section
-      .token-header
-        h3= title
-        if token
-          a.jwt-link(target='_blank', href=`https://jwt.io?token=${token}`)
-            img(height="20px", src="/static/images/jwt.svg", alt="Inspect on JWT.io")
-            span Inspect
-      p.text-muted No payload available
+        pre.json-display!= syntaxHighlight(payload)
+    else
+      p.text-muted.mb-0
+        if title === 'Refresh Token'
+          | Refresh tokens are opaque and don't contain a decodable payload.
+        else
+          | No payload available
 
 block content
   .content
     .container
       h2.mb-4 Token Details
-      
+
       .token-details
-        .row
-          .col-md-4
-            +tokenPayload(id_token_payload, 'ID Token Payload', id_token)
-          .col-md-4
-            +tokenPayload(access_token_payload, 'Access Token Payload', access_token ? access_token.access_token : null)
-          .col-md-4
-            +tokenPayload(null, 'Refresh Token', refresh_token)
-        
+        +tokenPayload(id_token_payload, 'ID Token', id_token)
+        +tokenPayload(access_token_payload, 'Access Token', access_token ? access_token.access_token : null)
+        +tokenPayload(null, 'Refresh Token', refresh_token)
+
         if access_token && access_token.expires_in
           .token-expiry.mt-4
             h4 Token Expiry Information
@@ -55,4 +53,17 @@ block content
               const date = new Date();
               date.setSeconds(date.getSeconds() + access_token.expires_in);
             p Access Token expires at: #{date.toLocaleString('en-US')}
-            p Time remaining: #{Math.floor(access_token.expires_in / 60)} minutes 
+            p Time remaining: #{Math.floor(access_token.expires_in / 60)} minutes
+
+      script.
+        function copyPayload(btn, text) {
+          navigator.clipboard.writeText(text).then(function () {
+            var original = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '<span>Copied!</span>';
+            setTimeout(function () {
+              btn.classList.remove('copied');
+              btn.innerHTML = original;
+            }, 1500);
+          });
+        }
