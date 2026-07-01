@@ -10,9 +10,14 @@ block content
               h4.mb-0
                 i.fas.fa-ticket-alt.me-2
                 | SSO Request Ticket Details
-              .badge.bg-warning.text-dark
-                i.fas.fa-clock.me-1
-                | #{ticket.status.toUpperCase()}
+              if ticket.status === 'completed'
+                .badge.bg-success
+                  i.fas.fa-check-circle.me-1
+                  | #{ticket.status.toUpperCase()}
+              else
+                .badge.bg-warning.text-dark
+                  i.fas.fa-clock.me-1
+                  | #{ticket.status.toUpperCase()}
           
           .card-body
             .row.mb-4

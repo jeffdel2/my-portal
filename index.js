@@ -662,9 +662,18 @@ app.post('/partners/dashboard/sso-request', requiresAuth(), async (req, res) => 
 		// Get Auth0 Management API token
 		const token = await getManagementApiToken();
 
+		// Fetch organization details from the Management API since org_name
+		// is not a standard ID token claim and orgName from the token is often undefined
+		const orgResponse = await axios.get(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}`,
+			{ headers: { Authorization: `Bearer ${token}` } }
+		);
+		const organization = orgResponse.data;
+		const orgDisplayName = organization.display_name || organization.name || orgName || 'Unknown Organization';
+
 		// Step 1: Create self-service profile in Auth0
 		const profileData = {
-			name: `${orgName || 'Unknown Organization'} - SSO Profile`
+			name: `${orgDisplayName} - SSO Profile`
 		};
 
 		const profileResponse = await axios.post(
@@ -682,14 +691,17 @@ app.post('/partners/dashboard/sso-request', requiresAuth(), async (req, res) => 
 
 		// Step 2: Generate ticket for IDP onboarding using the profile ID
 		// The sso-ticket endpoint requires connection_config with just the name
-		const connectionName = orgName ? 
-			orgName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '-profile' : 
-			'unknown-organization-profile';
+		const connectionName = orgDisplayName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '-profile';
 		
 		const ticketData = {
 			connection_config: {
 				name: connectionName
-			}
+			},
+			enabled_organizations: [
+				{
+					organization_id: orgId
+				}
+			]
 		};
 
 		const ticketResponse = await axios.post(
@@ -756,21 +768,70 @@ app.get('/partners/dashboard/ticket/:ticketId', requiresAuth(), async (req, res)
 			});
 		}
 
+		// Get organization info from token
+		const orgId = req.oidc.idTokenClaims.org_id;
+		const orgName = req.oidc.idTokenClaims.org_name;
+
+		// Fetch organization details from the Management API since org_name
+		// is not a standard ID token claim and orgName from the token is often undefined
+		const token = await getManagementApiToken();
+		const orgResponse = await axios.get(
+			`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}`,
+			{ headers: { Authorization: `Bearer ${token}` } }
+		);
+		const organization = orgResponse.data;
+		const orgDisplayName = organization.display_name || organization.name || orgName || 'Unknown Organization';
+
+		// Determine the connection name the same way it was generated when the
+		// ticket was created, then check Auth0 for whether the connection has
+		// actually been set up and enabled for this organization yet.
+		const connectionName = orgDisplayName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '-profile';
+
+		let status = 'pending';
+		try {
+			const connectionsResponse = await axios.get(
+				`${process.env.MGMT_BASE_URL}/api/v2/connections`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+					params: { name: connectionName }
+				}
+			);
+			const connection = connectionsResponse.data[0];
+
+			if (connection) {
+				const enabledConnectionsResponse = await axios.get(
+					`${process.env.MGMT_BASE_URL}/api/v2/organizations/${orgId}/enabled_connections`,
+					{ headers: { Authorization: `Bearer ${token}` } }
+				);
+				const isEnabledForOrg = enabledConnectionsResponse.data.some(
+					(enabledConnection) => enabledConnection.connection_id === connection.id
+				);
+				status = isEnabledForOrg ? 'completed' : 'pending';
+			}
+		} catch (statusError) {
+			console.error('Error checking SSO connection status:', statusError);
+			// Leave status as 'pending' if the check itself fails
+		}
+
 		// For now, we'll create a simple ticket details page
 		// In a real implementation, you'd fetch this from a database
 		const ticketData = {
 			ticketId: ticketId,
-			status: 'pending',
+			status: status,
 			createdAt: new Date().toISOString(),
-			organizationName: req.oidc.idTokenClaims.org_name || 'Unknown Organization',
+			organizationName: orgDisplayName,
 			requesterEmail: req.oidc.user.email,
 			requesterName: req.oidc.user.name,
 			requestType: 'enterprise_connection_setup',
-			description: `SSO setup request for organization: ${req.oidc.idTokenClaims.org_name || 'Unknown Organization'}`,
-			nextSteps: [
+			description: `SSO setup request for organization: ${orgDisplayName}`,
+			nextSteps: status === 'completed' ? [
+				'Your enterprise connection has been configured and enabled for your organization',
+				'Members of your organization can now sign in using your identity provider',
+				'Contact support if you run into any issues'
+			] : [
 				'Your SSO request has been received and logged',
-				'Our team will review your request within 1-2 business days',
-				'You will receive an email with setup instructions',
+				'Complete the identity provider setup using the ticket link provided',
+				'Once setup is finished, this page will update to reflect the connection status',
 				'Contact support if you have any questions'
 			]
 		};
